@@ -1,8 +1,4 @@
-pod2text Perl::Download::FTP.pm > README
-
-If this is still here it means the programmer was too lazy to create the readme file.
-
-You can create it now by using the command shown above from this directory.
+README for Perl extension Perl-Download-FTP
 
 At the very least you should be able to use this set of instructions
 to install the module...
