@@ -15,7 +15,7 @@ WriteMakefile(
     ( $mm_ver < 6.63_03 ? 'BUILD_REQUIRES' : 'TEST_REQUIRES' )
                     =>  {
                             'Test::Simple' => 0.44,
-                            'List::Compare::Functional' => 0.51,
+                            'List::Compare' => 0.51,
                         },
     ($mm_ver < 6.46 ? () : (META_MERGE => {
         'meta-spec' => { version => 2 },

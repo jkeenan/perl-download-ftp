@@ -4,15 +4,21 @@ use strict;
 use warnings;
 
 use Perl::Download::FTP;
-use Test::More qw(no_plan); # tests => 2;
+use Test::More qw(no_plan); # tests => 15;
 use List::Compare::Functional qw(
     is_LsubsetR
 );
 
 my ($self, $host, $dir);
 my (@allarchives, @gzips, @bzips, @xzs);
+my $default_host = 'ftp.cpan.org';
+my $default_dir  = '/pub/CPAN/src/5.0';
 
-$self = Perl::Download::FTP->new();
+$self = Perl::Download::FTP->new( {
+    host        => $default_host,
+    dir         => $default_dir,
+    Passive     => 1,
+} );
 ok(defined $self, "Constructor returned defined object when using default values");
 isa_ok ($self, 'Perl::Download::FTP');
 
@@ -52,38 +58,45 @@ my @exp_xzs = (
 );
 
 @allarchives = $self->ls();
+ok(scalar(@allarchives), "ls(): returned >0 elements");
 
 ok(is_LsubsetR( [
     \@exp_gzips,
     \@allarchives,
-] ), "ls(): No argument: Spot check .gz");
+] ), "ls(): No argument: Spot check .gz")
+    or diag explain (\@exp_gzips,\@allarchives);
 
 ok(is_LsubsetR( [
     \@exp_bzips,
     \@allarchives,
-] ), "ls(): No argument: Spot check .bz2");
+] ), "ls(): No argument: Spot check .bz2")
+    or diag explain (\@exp_bzips,\@allarchives);
 
 ok(is_LsubsetR( [
     \@exp_xzs,
     \@allarchives,
-] ), "ls(): No argument: Spot check .xz");
+] ), "ls(): No argument: Spot check .xz")
+    or diag explain (\@exp_xzs,\@allarchives);
 
 @allarchives = $self->ls('gz');
 
 ok(is_LsubsetR( [
     \@exp_gzips,
     \@allarchives,
-] ), "ls(): Request 'gz' only: Spot check .gz");
+] ), "ls(): Request 'gz' only: Spot check .gz")
+    or diag explain (\@exp_gzips,\@allarchives);
 
 ok(! is_LsubsetR( [
     \@exp_bzips,
     \@allarchives,
-] ), "ls(): Request 'gz' only: Spot check .bz2");
+] ), "ls(): Request 'gz' only: Spot check .bz2")
+    or diag explain (\@exp_bzips,\@allarchives);
 
 ok(! is_LsubsetR( [
     \@exp_xzs,
     \@allarchives,
-] ), "ls(): Request 'gz' only: Spot check .xz");
+] ), "ls(): Request 'gz' only: Spot check .xz")
+    or diag explain (\@exp_xzs,\@allarchives);
 
 
 @allarchives = $self->ls('bz2');
@@ -91,17 +104,20 @@ ok(! is_LsubsetR( [
 ok(! is_LsubsetR( [
     \@exp_gzips,
     \@allarchives,
-] ), "ls(): Request 'bz2' only: Spot check .gz");
+] ), "ls(): Request 'bz2' only: Spot check .gz")
+    or diag explain (\@exp_gzips,\@allarchives);
 
 ok(is_LsubsetR( [
     \@exp_bzips,
     \@allarchives,
-] ), "ls(): Request 'bz2' only: Spot check .bz2");
+] ), "ls(): Request 'bz2' only: Spot check .bz2")
+    or diag explain (\@exp_bzips,\@allarchives);
 
 ok(! is_LsubsetR( [
     \@exp_xzs,
     \@allarchives,
-] ), "ls(): Request 'bz2' only: Spot check .xz");
+] ), "ls(): Request 'bz2' only: Spot check .xz")
+    or diag explain (\@exp_xzs,\@allarchives);
 
 
 @allarchives = $self->ls('xz');
@@ -109,17 +125,20 @@ ok(! is_LsubsetR( [
 ok(! is_LsubsetR( [
     \@exp_gzips,
     \@allarchives,
-] ), "ls(): Request 'xz' only: Spot check .gz");
+] ), "ls(): Request 'xz' only: Spot check .gz")
+    or diag explain (\@exp_gzips,\@allarchives);
 
 ok(! is_LsubsetR( [
     \@exp_bzips,
     \@allarchives,
-] ), "ls(): Request 'xz' only: Spot check .bz2");
+] ), "ls(): Request 'xz' only: Spot check .bz2")
+    or diag explain (\@exp_bzips,\@allarchives);
 
 ok(is_LsubsetR( [
     \@exp_xzs,
     \@allarchives,
-] ), "ls(): Request 'xz' only: Spot check .xz");
+] ), "ls(): Request 'xz' only: Spot check .xz")
+    or diag explain (\@exp_xzs,\@allarchives);
 
 {
     local $@;
