@@ -36,3 +36,7 @@ nytprof/
 nytprof.out
 .version_info.pl
 dump
+\.gitignore
+\.travis.yml
+\.appveyor.yml
+^README.md
