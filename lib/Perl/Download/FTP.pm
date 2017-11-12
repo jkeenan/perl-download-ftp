@@ -22,7 +22,7 @@ Perl::Download::FTP - Identify Perl releases and download the most recent via FT
 
     @all_releases = $self->ls();
 
-    $classified_releases = $self->classify_releases();
+    $classified_releases = $self->classify_releases(\@all_releases);
 
     @prod = $self->get_production_releases();
     @dev  = $self->get_development_releases();
@@ -234,9 +234,100 @@ sub ls {
     } $self->{ftp}->ls();
 }
 
+=head2 C<classify_releases()>
+
+=over 4
+
+=item * Purpose
+
+Categorize releases as production, development or RC (release candidate).
+
+=item * Arguments
+
+Reference to the array returned by C<ls()>.
+
+=item * Return Value
+
+Hash reference.
+
+=item * Comment
+
+=back
+
+=cut
+
+sub classify_releases {
+    my ($self, $releases) = @_;
+
+    my %versions;
+    for my $tb (@{$releases}) {
+        my ($major, $minor, $rc);
+        if ($tb =~ m/^
+            perl-5\.(\d+)
+            \.(\d+)
+            (?:-((?:TRIAL|RC)\d+))?
+            \.tar\.(?:gz|bz2|xz)
+            $/x) {
+            ($major, $minor, $rc) = ($1,$2,$3);
+            if ($major % 2 == 0) {
+                unless (defined $rc) {
+                    $versions{prod}{$tb} = {
+                        tarball => $tb,
+                        major   => $major,
+                        minor   => $minor,
+                    }
+                }
+                else {
+                    $versions{rc}{$tb} = {
+                        tarball => $tb,
+                        major   => $major,
+                        minor   => $minor,
+                        rc      => $rc,
+                    }
+                }
+            }
+            else {
+                $versions{dev}{$tb} = {
+                    tarball => $tb,
+                    major   => $major,
+                    minor   => $minor,
+                }
+            }
+        }
+        elsif ($tb =~ m/^
+            perl5\.
+            (00\d)
+            (?:_(\d{2}))?   # 5.003_007 thru 5.005; account for RC and TRIAL
+            .*?
+            \.tar           # We only want tarballs
+            \.gz            # Compression format
+            $/x
+        ) {
+            ($major, $rc) = ($1,$2);
+            $rc //= '';
+            if (! $rc) {
+                $versions{prod}{$tb} = {
+                    tarball => $tb,
+                    major   => $major,
+                    minor   => '',
+                }
+            }
+            else {
+                $versions{rc}{$tb} = {
+                    tarball => $tb,
+                    major   => $major,
+                    minor   => '',
+                }
+            }
+        }
+    }
+    return \%versions;
+}
+
 =head1 BUGS AND SUPPORT
 
-
+Please report any bugs by mail to C<bug-Perl-Download-FTP@rt.cpan.org>
+or through the web interface at L<http://rt.cpan.org>.
 
 =head1 AUTHOR
 

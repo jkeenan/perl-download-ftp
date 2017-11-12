@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Perl::Download::FTP;
-use Test::More qw(no_plan); # tests => 2;
+use Test::More tests => 8;
 
 my ($self, $host, $dir);
 

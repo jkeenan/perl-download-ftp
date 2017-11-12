@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Perl::Download::FTP;
-use Test::More qw(no_plan); # tests => 15;
+use Test::More tests => 16;
 use List::Compare::Functional qw(
     is_LsubsetR
 );

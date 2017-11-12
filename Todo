@@ -1,5 +1,14 @@
 TODO list for Perl module Perl::Download::FTP
 
-- Nothing yet
+In each test file, add test for network connection; skip otherwise.
 
+Implement and test these methods:
+
+    @prod = $self->get_production_releases();
+    @dev  = $self->get_development_releases();
+    @rc   = $self->get_rc_releases();
+
+    $latest_prod    = $self->get_latest_prod_release();
+    $latest_dev     = $self->get_latest_dev_release();
+    $latest_rc      = $self->get_latest_rc_release();
 
