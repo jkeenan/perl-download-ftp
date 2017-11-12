@@ -77,7 +77,8 @@ Perl::Download::FTP object.
 The method establishes an FTP connection to <host>, logs you in as an
 anonymous user, and changes directory to C<dir>.
 
-Wrapper around Net::FTP object.  You will get Net::FTP error messages at any point of failure.
+Wrapper around Net::FTP object.  You will get Net::FTP error messages at any
+point of failure.  Uses FTP C<Passive> mode.
 
 =back
 
@@ -101,7 +102,7 @@ sub new {
         SSL             => undef,
         Timeout         => 120,
         Debug           => 0,
-        Passive         => 0,
+        Passive         => 1,
         Hash            => undef,
         LocalAddr       => undef,
         Domain          => undef,
@@ -152,11 +153,68 @@ sub new {
     return bless $data, $class;
 }
 
+=head2 C<ls()>
+
+=over 4
+
+=item * Purpose
+
+Identify all Perl releases.
+
+=item * Arguments
+
+    @all_releases = $self->ls();
+
+Returns list of all Perl core tarballs on the FTP host.
+
+    @all_gzipped_releases = $self->ls('gz');
+
+Returns list of only those all tarballs on the FTP host which are compressed
+in C<.gz> format.  Also available:  C<bz2>, C<xz>.
+
+=item * Return Value
+
+List of strings like:
+
+    "perl-5.10.0-RC2.tar.gz",
+    "perl-5.10.0.tar.gz",
+    "perl-5.26.0.tar.gz",
+    "perl-5.26.1-RC1.tar.gz",
+    "perl-5.27.0.tar.gz",
+    "perl-5.6.0.tar.gz",
+    "perl-5.6.1-TRIAL1.tar.gz",
+    "perl-5.6.1-TRIAL2.tar.gz",
+    "perl-5.6.1-TRIAL3.tar.gz",
+    "perl5.003_07.tar.gz",
+    "perl5.004.tar.gz",
+    "perl5.004_01.tar.gz",
+    "perl5.005.tar.gz",
+    "perl5.005_01.tar.gz",
+
+    "perl-5.10.1.tar.bz2",
+    "perl-5.12.2-RC1.tar.bz2",
+    "perl-5.26.1-RC1.tar.bz2",
+    "perl-5.27.0.tar.bz2",
+    "perl-5.8.9.tar.bz2",
+
+    "perl-5.21.10.tar.xz",
+    "perl-5.21.6.tar.xz",
+    "perl-5.22.0-RC1.tar.xz",
+    "perl-5.22.0.tar.xz",
+    "perl-5.22.1-RC4.tar.xz",
+    "perl-5.26.1.tar.xz",
+    "perl-5.27.2.tar.xz",
+
+=back
+
+=cut
+
 sub ls {
     my ($self, $compression) = @_;
-    my %eligible_compressions = map { $_ => 1 } (qw| gz bz2 xz |);
+    my @compressions = (qw| gz bz2 xz |);
+    my %eligible_compressions = map { $_ => 1 } @compressions;
     if (! defined $compression) {
-        $compression //= 'gz|bz2|xz';
+        $compression //= join('|' => @compressions);
     }
     else {
         croak "ls():  Bad compression format:  $compression"
