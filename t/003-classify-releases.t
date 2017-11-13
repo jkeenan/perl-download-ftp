@@ -31,6 +31,7 @@ ok(defined $self, "Constructor returned defined object when using default values
 isa_ok ($self, 'Perl::Download::FTP');
 
 @allarchives = $self->ls();
+#pp(\@allarchives);
 my $allcount = scalar(@allarchives);
 ok($allcount, "ls(): returned >0 elements: $allcount");
 

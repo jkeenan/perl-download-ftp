@@ -5,12 +5,12 @@ use warnings;
 
 use Perl::Download::FTP;
 use Test::More;
-#unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
-#    plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
-#}
-#else {
+unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
+    plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
+}
+else {
     plan tests => 30;
-#}
+}
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 use List::Compare::Functional qw(
     is_LsubsetR
@@ -87,9 +87,9 @@ for (my $i = 0; $i <= $#three_oldest; $i++) {
 cmp_ok(scalar(@dev), '>=', 1, "Non-zero number of .gz tarballs listed");
 #pp(\@dev);
 @three_oldest = (
-    "perl-5.7.2.tar.gz",
-    "perl-5.7.1.tar.gz",
-    "perl-5.7.0.tar.gz",
+    "perl5.004_02.tar.gz",
+    "perl5.004_01.tar.gz",
+    "perl5.003_07.tar.gz",
 );
 for (my $i = 0; $i <= $#three_oldest; $i++) {
     is($dev[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
@@ -119,4 +119,41 @@ cmp_ok(scalar(@dev), '>=', 1, "Non-zero number of .xz tarballs listed");
 for (my $i = 0; $i <= $#three_oldest; $i++) {
     is($dev[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
 }
+
+#@rc = $self->list_rc_releases('gz');
+#cmp_ok(scalar(@rc), '>=', 1, "Non-zero number of .gz tarballs listed");
+## NEED TO FILL IN THREE OLDEST .gz RC 
+#@three_oldest = (
+#);
+#for (my $i = 0; $i <= $#three_oldest; $i++) {
+#    is($dev[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
+#}
+#
+#@rc1 = $self->list_rc_releases();
+#is_deeply(\@rc1, \@rc, "list_rc_releases defaults to '.gz'");
+#
+#@rc = $self->list_rc_releases('bz2');
+#cmp_ok(scalar(@rc), '>=', 1, "Non-zero number of .bz2 tarballs listed");
+#pp(\@rc);
+#@three_oldest = (
+#    "perl-5.12.2-RC1.tar.bz2",
+#    "perl-5.12.1-RC2.tar.bz2",
+#    "perl-5.12.1-RC1.tar.bz2",
+#);
+#for (my $i = 0; $i <= $#three_oldest; $i++) {
+#    is($rc[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
+#}
+#
+#@rc = $self->list_rc_releases('xz');
+#cmp_ok(scalar(@rc), '>=', 1, "Non-zero number of .xz tarballs listed");
+#pp(\@rc);
+#@three_oldest = (
+#    "perl-5.22.1-RC1.tar.xz",
+#    "perl-5.22.0-RC2.tar.xz",
+#    "perl-5.22.0-RC1.tar.xz",
+#
+#);
+#for (my $i = 0; $i <= $#three_oldest; $i++) {
+#    is($rc[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
+#}
 

@@ -335,9 +335,10 @@ sub classify_releases {
             \.gz            # Compression format
             $/x
         ) {
-            ($major, $rc) = ($1,$2);
-            $rc //= '';
-            if (! $rc) {
+            my $early_dev;
+            ($major, $early_dev) = ($1,$2);
+            $early_dev //= '';
+            if (! $early_dev) {
                 $versions{prod}{$tb} = {
                     tarball => $tb,
                     major   => $major,
@@ -345,10 +346,10 @@ sub classify_releases {
                 }
             }
             else {
-                $versions{rc}{$tb} = {
+                $versions{dev}{$tb} = {
                     tarball => $tb,
                     major   => $major,
-                    minor   => '',
+                    minor   => $early_dev,
                 }
             }
         }
@@ -453,6 +454,40 @@ sub list_development_releases {
         $self->{versions}->{dev}{$b}{major} <=> $self->{versions}->{dev}{$a}{major} ||
         $self->{versions}->{dev}{$b}{minor} <=> $self->{versions}->{dev}{$a}{minor}
     } keys %{$self->{versions}->{dev}};
+}
+
+=head2 C<list_rc_releases()>
+
+=over 4
+
+=item * Purpose
+
+For a specified compression format, compose a list of all release candidate (RC) or TRIAL releases
+available on the server in descending logical order.  Example for C<gz> compressed tarballs:
+
+
+=item * Arguments
+
+    @rc = $self->list_rc_releases('gz');
+
+If no argument is provided, the method will default to reporting C<.gz> releases only.
+
+=item * Return Value
+
+List holding strings naming tarballs with the specified compression.
+
+=back
+
+=cut
+
+sub list_rc_releases {
+    my ($self, $compression) = @_;
+    $compression = $self->_compression_check($compression);
+
+    return grep { /\.${compression}$/ } sort {
+        $self->{versions}->{rc}{$b}{major} <=> $self->{versions}->{rc}{$a}{major} ||
+        $self->{versions}->{rc}{$b}{minor} <=> $self->{versions}->{rc}{$a}{minor}
+    } keys %{$self->{versions}->{rc}};
 }
 
 =head1 BUGS AND SUPPORT
