@@ -38,6 +38,13 @@ This library provides (a) methods for obtaining a list of all Perl 5 releases
 which are available for FTP download; and (b) methods for obtaining the most
 recent release.
 
+=head2 Compression Formats
+
+Perl releases have, over time, used three different compression formats:
+C<gz>, C<bz2> and C<xz>.  C<gz> is the one that has been used in every
+production, development and release candidate release, so that is the default
+value in some of the methods below.
+
 =head2 Testing
 
 This library can only be truly tested by attempting live FTP connections and
@@ -46,7 +53,7 @@ can be problematic when being conducted in an automatic manner or when the
 user is behind a firewall, the test files under F<t/> will only be run live
 when you say:
 
-    export AUTHOR_TESTING=1 && make test
+    export PERL_ALLOW_NETWORK_TESTING=1 && make test
 
 Each test file further attempts to confirm the possibility of making an FTP
 connection by using CPAN library Test::RequiresInternet.
@@ -350,6 +357,17 @@ sub classify_releases {
     #return \%versions;
 }
 
+sub _compression_check {
+    my ($self, $compression) = @_;
+    if (! defined $compression) {
+        return 'gz';
+    }
+    else {
+        croak "ls():  Bad compression format:  $compression"
+            unless $self->{eligible_compressions}{$compression};
+        return $compression;
+    }
+}
 
 =head2 C<list_production_releases()>
 
@@ -376,9 +394,11 @@ available on the server in descending logical order.  Example for C<gz> compress
 
     @prod = $self->list_production_releases('gz');
 
+If no argument is provided, the method will default to reporting C<.gz> releases only.
+
 =item * Return Value
 
-=item * Comment
+List holding strings naming tarballs with the specified compression.
 
 =back
 
@@ -386,18 +406,53 @@ available on the server in descending logical order.  Example for C<gz> compress
 
 sub list_production_releases {
     my ($self, $compression) = @_;
-    if (! defined $compression) {
-        $compression = 'gz';
-    }
-    else {
-        croak "ls():  Bad compression format:  $compression"
-            unless $self->{eligible_compressions}{$compression};
-    }
+    $compression = $self->_compression_check($compression);
 
     return grep { /\.${compression}$/ } sort {
         $self->{versions}->{prod}{$b}{major} <=> $self->{versions}->{prod}{$a}{major} ||
         $self->{versions}->{prod}{$b}{minor} <=> $self->{versions}->{prod}{$a}{minor}
     } keys %{$self->{versions}->{prod}};
+}
+
+=head2 C<list_development_releases()>
+
+=over 4
+
+=item * Purpose
+
+For a specified compression format, compose a list of all development releases
+available on the server in descending logical order.  Example for C<gz> compressed tarballs:
+
+    perl-5.27.5.tar.gz
+    perl-5.27.4.tar.gz
+    perl-5.27.3.tar.gz
+    ...
+    perl-5.7.2.tar.gz
+    perl-5.7.1.tar.gz
+    perl-5.7.0.tar.gz
+
+=item * Arguments
+
+    @dev = $self->list_development_releases('gz');
+
+If no argument is provided, the method will default to reporting C<.gz> releases only.
+
+=item * Return Value
+
+List holding strings naming tarballs with the specified compression.
+
+=back
+
+=cut
+
+sub list_development_releases {
+    my ($self, $compression) = @_;
+    $compression = $self->_compression_check($compression);
+
+    return grep { /\.${compression}$/ } sort {
+        $self->{versions}->{dev}{$b}{major} <=> $self->{versions}->{dev}{$a}{major} ||
+        $self->{versions}->{dev}{$b}{minor} <=> $self->{versions}->{dev}{$a}{minor}
+    } keys %{$self->{versions}->{dev}};
 }
 
 =head1 BUGS AND SUPPORT

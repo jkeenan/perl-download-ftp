@@ -29,8 +29,8 @@ my $default_dir  = '/pub/CPAN/src/5.0';
 }
 
 SKIP: {
-    skip "Set AUTHOR_TESTING to conduct live tests",
-        6 unless $ENV{AUTHOR_TESTING};
+    skip "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests",
+        6 unless $ENV{PERL_ALLOW_NETWORK_TESTING};
 
     {
         local $@;

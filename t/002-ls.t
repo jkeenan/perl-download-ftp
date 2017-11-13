@@ -5,8 +5,8 @@ use warnings;
 
 use Perl::Download::FTP;
 use Test::More;
-unless ($ENV{AUTHOR_TESTING}) {
-    plan 'skip_all' => "Set AUTHOR_TESTING to conduct live tests";
+unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
+    plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
 }
 else {
     plan tests => 16;
