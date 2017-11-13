@@ -4,7 +4,14 @@ use strict;
 use warnings;
 
 use Perl::Download::FTP;
-use Test::More tests => 8;
+use Test::More;
+unless ($ENV{AUTHOR_TESTING}) {
+    plan 'skip_all' => "Set AUTHOR_TESTING to conduct live tests";
+}
+else {
+    plan tests =>  8;
+}
+use Test::RequiresInternet ('ftp.cpan.org' => 21);
 
 my ($self, $host, $dir);
 

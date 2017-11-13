@@ -34,7 +34,22 @@ Perl::Download::FTP - Identify Perl releases and download the most recent via FT
 
 =head1 DESCRIPTION
 
-This library provides (a) methods for obtaining a list of all Perl 5 releases which are available for FTP download; and (b) methods for obtaining the most recent release.
+This library provides (a) methods for obtaining a list of all Perl 5 releases
+which are available for FTP download; and (b) methods for obtaining the most
+recent release.
+
+=head2 Testing
+
+This library can only be truly tested by attempting live FTP connections and
+downloads of Perl 5 source code tarballs.  Since testing over the internet
+can be problematic when being conducted in an automatic manner or when the
+user is behind a firewall, the test files under F<t/> will only be run live
+when you say:
+
+    export AUTHOR_TESTING=1 && make test
+
+Each test file further attempts to confirm the possibility of making an FTP
+connection by using CPAN library Test::RequiresInternet.
 
 =head1 METHODS
 
@@ -329,6 +344,11 @@ sub classify_releases {
 Please report any bugs by mail to C<bug-Perl-Download-FTP@rt.cpan.org>
 or through the web interface at L<http://rt.cpan.org>.
 
+=head1 ACKNOWLEDGEMENTS
+
+Thanks for feedback from Chad Granum, Kent Fredric and David Golden
+in the perl.cpan.workers newsgroup.
+
 =head1 AUTHOR
 
     James E Keenan
@@ -348,7 +368,7 @@ Copyright James E Keenan 2017.  All rights reserved.
 
 =head1 SEE ALSO
 
-perl(1).  Net::FTP(3).
+perl(1).  Net::FTP(3).  Test::RequiresInternet(3).
 
 =cut
 
