@@ -15,7 +15,7 @@ use Test::RequiresInternet ('ftp.cpan.org' => 21);
 use List::Compare::Functional qw(
     is_LsubsetR
 );
-use Data::Dump qw(dd pp);
+#use Data::Dump qw(dd pp);
 
 my ($self, $host, $dir);
 my (@allarchives, @gzips, @bzips, @xzs);
@@ -45,7 +45,7 @@ is($classified_count, $allcount,
 
 my @prod = $self->list_production_releases('gz');
 cmp_ok(scalar(@prod), '>=', 1, "Non-zero number of .gz tarballs listed");
-pp(\@prod);
+#pp(\@prod);
 my @three_oldest = (
   "perl-5.6.0.tar.gz",
   "perl5.005.tar.gz",
