@@ -33,7 +33,7 @@ isa_ok ($self, 'Perl::Download::FTP');
 my $allcount = scalar(@allarchives);
 ok($allcount, "ls(): returned >0 elements: $allcount");
 
-my $classified = $self->classify_releases(\@allarchives);
+my $classified = $self->classify_releases();
 my $classified_count =
     (scalar keys %{$classified->{dev}}) +
     (scalar keys %{$classified->{prod}}) +
