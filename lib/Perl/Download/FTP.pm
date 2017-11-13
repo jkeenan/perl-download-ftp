@@ -24,9 +24,9 @@ Perl::Download::FTP - Identify Perl releases and download the most recent via FT
 
     $classified_releases = $self->classify_releases(\@all_releases);
 
-    @prod = $self->get_production_releases();
-    @dev  = $self->get_development_releases();
-    @rc   = $self->get_rc_releases();
+    @prod = $self->list_production_releases();
+    @dev  = $self->list_development_releases();
+    @rc   = $self->list_rc_releases();
 
     $latest_prod    = $self->get_latest_prod_release();
     $latest_dev     = $self->get_latest_dev_release();
@@ -165,6 +165,10 @@ sub new {
 
     $data->{ftp} = $ftp;
 
+    my @compressions = (qw| gz bz2 xz |);
+    $data->{eligible_compressions}  = { map { $_ => 1 } @compressions };
+    $data->{compression_string}     = join('|' => @compressions);
+
     return bless $data, $class;
 }
 
@@ -224,16 +228,22 @@ List of strings like:
 
 =cut
 
+=pod
+
+    my @compressions = (qw| gz bz2 xz |);
+    $data->{eligible_compressions}  = { map { $_ => 1 } @compressions };
+    $data->{compression_string}     = join('|' => @compressions);
+
+=cut
+
 sub ls {
     my ($self, $compression) = @_;
-    my @compressions = (qw| gz bz2 xz |);
-    my %eligible_compressions = map { $_ => 1 } @compressions;
     if (! defined $compression) {
-        $compression //= join('|' => @compressions);
+        $compression = $self->{compression_string};
     }
     else {
         croak "ls():  Bad compression format:  $compression"
-            unless $eligible_compressions{$compression};
+            unless $self->{eligible_compressions}{$compression};
     }
     return grep {
         /^perl
@@ -336,7 +346,58 @@ sub classify_releases {
             }
         }
     }
-    return \%versions;
+    $self->{versions} = \%versions;
+    #return \%versions;
+}
+
+
+=head2 C<list_production_releases()>
+
+=over 4
+
+=item * Purpose
+
+For a specified compression format, compose a list of all production releases
+available on the server in descending logical order.  Example for C<gz> compressed tarballs:
+
+    perl-5.26.1.tar.gz
+    perl-5.26.0.tar.gz
+    perl-5.24.3.tar.gz
+    perl-5.24.2.tar.gz
+    perl-5.24.1.tar.gz
+    perl-5.24.0.tar.gz
+    ...
+    perl-5.6.1.tar.gz
+    perl-5.6.0.tar.gz
+    perl5.005.tar.gz
+    perl5.004.tar.gz
+
+=item * Arguments
+
+    @prod = $self->list_production_releases('gz');
+
+=item * Return Value
+
+=item * Comment
+
+=back
+
+=cut
+
+sub list_production_releases {
+    my ($self, $compression) = @_;
+    if (! defined $compression) {
+        $compression = 'gz';
+    }
+    else {
+        croak "ls():  Bad compression format:  $compression"
+            unless $self->{eligible_compressions}{$compression};
+    }
+
+    return grep { /\.${compression}$/ } sort {
+        $self->{versions}->{prod}{$b}{major} <=> $self->{versions}->{prod}{$a}{major} ||
+        $self->{versions}->{prod}{$b}{minor} <=> $self->{versions}->{prod}{$a}{minor}
+    } keys %{$self->{versions}->{prod}};
 }
 
 =head1 BUGS AND SUPPORT

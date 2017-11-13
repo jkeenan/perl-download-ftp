@@ -8,4 +8,5 @@ README
 t/001-new.t
 t/002-ls.t
 t/003-classify-releases.t
+t/004-releases.t
 Todo
