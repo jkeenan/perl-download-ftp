@@ -5,7 +5,6 @@ use 5.10.1;
 use Carp;
 use Net::FTP;
 our $VERSION = '0.01';
-#use Data::Dump qw(dd pp);
 
 =head1 NAME
 
@@ -22,7 +21,7 @@ Perl::Download::FTP - Identify Perl releases and download the most recent via FT
 
     @all_releases = $self->ls();
 
-    $classified_releases = $self->classify_releases(\@all_releases);
+    $classified_releases = $self->classify_releases();
 
     @prod = $self->list_production_releases();
     @dev  = $self->list_development_releases();
@@ -196,7 +195,7 @@ Returns list of all Perl core tarballs on the FTP host.
     @all_gzipped_releases = $self->ls('gz');
 
 Returns list of only those all tarballs on the FTP host which are compressed
-in C<.gz> format.  Also available:  C<bz2>, C<xz>.
+in C<.gz> format.  Also available (in separate calls):  C<bz2>, C<xz>.
 
 =item * Return Value
 
@@ -235,14 +234,6 @@ List of strings like:
 
 =cut
 
-=pod
-
-    my @compressions = (qw| gz bz2 xz |);
-    $data->{eligible_compressions}  = { map { $_ => 1 } @compressions };
-    $data->{compression_string}     = join('|' => @compressions);
-
-=cut
-
 sub ls {
     my ($self, $compression) = @_;
     if (! defined $compression) {
@@ -252,7 +243,7 @@ sub ls {
         croak "ls():  Bad compression format:  $compression"
             unless $self->{eligible_compressions}{$compression};
     }
-    return grep {
+    my @all_releases = grep {
         /^perl
         (?:
             -5\.\d+\.\d+        # 5.6.0 and above
@@ -264,6 +255,8 @@ sub ls {
         \.(?:${compression})    # Compression format
         $/x
     } $self->{ftp}->ls();
+    $self->{all_releases} = \@all_releases;
+    return @all_releases;
 }
 
 =head2 C<classify_releases()>
@@ -276,23 +269,21 @@ Categorize releases as production, development or RC (release candidate).
 
 =item * Arguments
 
-Reference to the array returned by C<ls()>.
+None.  Works on data stored in object by C<ls()>.
 
 =item * Return Value
 
 Hash reference.
-
-=item * Comment
 
 =back
 
 =cut
 
 sub classify_releases {
-    my ($self, $releases) = @_;
+    my ($self) = @_;
 
     my %versions;
-    for my $tb (@{$releases}) {
+    for my $tb (@{$self->{all_releases}}) {
         my ($major, $minor, $rc);
         if ($tb =~ m/^
             perl-5\.(\d+)
@@ -486,7 +477,8 @@ sub list_rc_releases {
 
     return grep { /\.${compression}$/ } sort {
         $self->{versions}->{rc}{$b}{major} <=> $self->{versions}->{rc}{$a}{major} ||
-        $self->{versions}->{rc}{$b}{minor} <=> $self->{versions}->{rc}{$a}{minor}
+        $self->{versions}->{rc}{$b}{minor} <=> $self->{versions}->{rc}{$a}{minor} ||
+        $self->{versions}->{rc}{$b}{rc} cmp $self->{versions}->{rc}{$a}{rc}
     } keys %{$self->{versions}->{rc}};
 }
 

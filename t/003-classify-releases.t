@@ -15,7 +15,6 @@ use Test::RequiresInternet ('ftp.cpan.org' => 21);
 use List::Compare::Functional qw(
     is_LsubsetR
 );
-#use Data::Dump qw(dd pp);
 
 my ($self, $host, $dir);
 my (@allarchives, @gzips, @bzips, @xzs);
@@ -31,7 +30,6 @@ ok(defined $self, "Constructor returned defined object when using default values
 isa_ok ($self, 'Perl::Download::FTP');
 
 @allarchives = $self->ls();
-#pp(\@allarchives);
 my $allcount = scalar(@allarchives);
 ok($allcount, "ls(): returned >0 elements: $allcount");
 
@@ -42,5 +40,4 @@ my $classified_count =
     (scalar keys %{$classified->{rc}});
 is($classified_count, $allcount,
     "Got expected number of classified entries: $allcount");
-#pp($classified);
 
