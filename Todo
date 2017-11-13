@@ -1,6 +1,7 @@
 TODO list for Perl module Perl::Download::FTP
 
 In each test file, add test for network connection; skip otherwise.
+DONE Nov 12 2017
 
 Implement and test these methods:
 
