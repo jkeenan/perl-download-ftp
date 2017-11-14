@@ -18,6 +18,7 @@ Perl::Download::FTP - Identify Perl releases and download the most recent via FT
     $self = Perl::Download::FTP->new( {
         host        => 'ftp.cpan.org',
         dir         => '/pub/CPAN/src/5.0',
+        verbose     => 1,
     } );
 
     @all_releases = $self->ls();
@@ -79,6 +80,7 @@ Perl::Download::FTP constructor.
     $self = Perl::Download::FTP->new( {
         host        => 'ftp.cpan.org',
         dir         => '/pub/CPAN/src/5.0',
+        verbose     => 1,
     } );
 
     $self = Perl::Download::FTP->new( {
@@ -92,7 +94,8 @@ Any options which can be passed to F<Net::FTP::new()> may also be passed as
 key-value pairs.  When no argument is provided, the values shown above for
 C<host> and C<dir> will be used.  You may enter values for any CPAN mirror
 which provides FTP access.  (See L<https://www.cpan.org/SITES.html> and
-L<http://mirrors.cpan.org/>.)
+L<http://mirrors.cpan.org/>.)  You may also pass C<verbose> for more
+descriptive output; by default, this is off.
 
 =item * Return Value
 
@@ -410,6 +413,8 @@ sub list_releases {
     }
     $compression = $self->_prepare_list($compression);
 
+    say "Preparing list of '$type' releases with '$compression' compression"
+        if $self->{verbose};
     my @these_releases;
     if ($type eq 'prod') {
         @these_releases =

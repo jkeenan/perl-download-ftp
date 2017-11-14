@@ -10,12 +10,13 @@ unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
     plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
 }
 else {
-    plan tests =>  59;
+    plan tests =>  68;
 }
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 use List::Compare::Functional qw(
     is_LsubsetR
 );
+use Capture::Tiny qw( capture_stdout );
 
 my ($self, $host, $dir);
 my (@allarchives, $allcount, @gzips, @bzips, @xzs);
@@ -250,5 +251,52 @@ cmp_ok(scalar(@rc), '>=', 1, "Non-zero number of .gz tarballs listed");
 );
 for (my $i = 0; $i <= $#three_oldest; $i++) {
     is($rc[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
+}
+
+###########################################################
+
+note("verbose output");
+
+my ($self2, $stdout, $type, $compression);
+
+$self2 = Perl::Download::FTP->new( {
+    host        => $default_host,
+    dir         => $default_dir,
+    Passive     => 1,
+    verbose     => 1,
+} );
+ok(defined $self2, "Constructor returned defined object when using default values");
+isa_ok ($self2, 'Perl::Download::FTP');
+
+$stdout = capture_stdout { @allarchives = $self2->ls(); };
+$allcount = scalar(@allarchives);
+ok($allcount, "ls(): returned >0 elements: $allcount");
+like(
+    $stdout,
+    qr/Identified \d+ perl releases at ftp:\/\/\Q${default_host}${default_dir}\E/,
+    "ls(): Got expected verbose output"
+);
+
+$compression = 'gz';
+$type = 'prod';
+$stdout = capture_stdout {
+    @prod = $self2->list_releases( {
+        compression         => $compression,
+        type                => $type,
+    } );
+};
+like(
+    $stdout,
+    qr/Preparing list of '$type' releases with '$compression' compression/,
+    "list_releases(): Got expected verbose output"
+);
+cmp_ok(scalar(@prod), '>=', 1, "Non-zero number of .gz tarballs listed");
+@three_oldest = (
+  "perl-5.6.0.tar.gz",
+  "perl5.005.tar.gz",
+  "perl5.004.tar.gz",
+);
+for (my $i = 0; $i <= $#three_oldest; $i++) {
+    is($prod[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
 }
 
