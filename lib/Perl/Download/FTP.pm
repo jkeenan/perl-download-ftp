@@ -281,7 +281,7 @@ Hash reference.
 =cut
 
 sub classify_releases {
-    my ($self) = @_;
+    my $self = shift;
 
     my %versions;
     for my $tb (@{$self->{all_releases}}) {
@@ -347,7 +347,7 @@ sub classify_releases {
         }
     }
     $self->{versions} = \%versions;
-    #return \%versions;
+    return \%versions;
 }
 
 sub _compression_check {
@@ -360,6 +360,16 @@ sub _compression_check {
             unless $self->{eligible_compressions}{$compression};
         return $compression;
     }
+}
+
+sub _prepare_list {
+    my ($self, $compression) = @_;
+    $compression = $self->_compression_check($compression);
+
+    unless (exists $self->{versions}) {
+        $self->classify_releases();
+    }
+    return $compression;
 }
 
 =head2 C<list_production_releases()>
@@ -399,7 +409,7 @@ List holding strings naming tarballs with the specified compression.
 
 sub list_production_releases {
     my ($self, $compression) = @_;
-    $compression = $self->_compression_check($compression);
+    $compression = $self->_prepare_list($compression);
 
     my @production_releases =
         grep { /\.${compression}$/ } sort {
@@ -444,7 +454,7 @@ List holding strings naming tarballs with the specified compression.
 
 sub list_development_releases {
     my ($self, $compression) = @_;
-    $compression = $self->_compression_check($compression);
+    $compression = $self->_prepare_list($compression);
 
     my @development_releases =
         grep { /\.${compression}$/ } sort {
@@ -482,7 +492,7 @@ List holding strings naming tarballs with the specified compression.
 
 sub list_rc_releases {
     my ($self, $compression) = @_;
-    $compression = $self->_compression_check($compression);
+    $compression = $self->_prepare_list($compression);
 
     my @rc_releases =
         grep { /\.${compression}$/ } sort {

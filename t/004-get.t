@@ -14,7 +14,7 @@ else {
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 
 my ($self);
-my (@allarchives, @gzips, @bzips, @xzs);
+my (@allarchives, $allcount);
 my $default_host = 'ftp.cpan.org';
 my $default_dir  = '/pub/CPAN/src/5.0';
 
@@ -27,7 +27,7 @@ ok(defined $self, "Constructor returned defined object when using default values
 isa_ok ($self, 'Perl::Download::FTP');
 
 @allarchives = $self->ls();
-my $allcount = scalar(@allarchives);
+$allcount = scalar(@allarchives);
 ok($allcount, "ls(): returned >0 elements: $allcount");
 
 my $classified = $self->classify_releases();

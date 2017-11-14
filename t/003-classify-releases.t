@@ -9,7 +9,7 @@ unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
     plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
 }
 else {
-    plan tests => 43;
+    plan tests => 58;
 }
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 use List::Compare::Functional qw(
@@ -17,7 +17,7 @@ use List::Compare::Functional qw(
 );
 
 my ($self, $host, $dir);
-my (@allarchives, @gzips, @bzips, @xzs);
+my (@allarchives, $allcount, @gzips, @bzips, @xzs);
 my $default_host = 'ftp.cpan.org';
 my $default_dir  = '/pub/CPAN/src/5.0';
 
@@ -30,7 +30,7 @@ ok(defined $self, "Constructor returned defined object when using default values
 isa_ok ($self, 'Perl::Download::FTP');
 
 @allarchives = $self->ls();
-my $allcount = scalar(@allarchives);
+$allcount = scalar(@allarchives);
 ok($allcount, "ls(): returned >0 elements: $allcount");
 
 my $classified = $self->classify_releases();
@@ -158,3 +158,58 @@ cmp_ok(scalar(@rc), '>=', 1, "Non-zero number of .xz tarballs listed");
 for (my $i = 0; $i <= $#three_oldest; $i++) {
     is($rc[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
 }
+
+note("Call a list_*_releases() method without previously calling classify_releases()");
+
+my $self1;
+$self1 = Perl::Download::FTP->new( {
+    host        => $default_host,
+    dir         => $default_dir,
+    Passive     => 1,
+} );
+ok(defined $self1, "Constructor returned defined object when using default values");
+isa_ok ($self1, 'Perl::Download::FTP');
+
+@allarchives = $self1->ls();
+$allcount = scalar(@allarchives);
+ok($allcount, "ls(): returned >0 elements: $allcount");
+
+note("production releases");
+
+@prod = $self1->list_production_releases('gz');
+cmp_ok(scalar(@prod), '>=', 1, "Non-zero number of .gz tarballs listed");
+@three_oldest = (
+  "perl-5.6.0.tar.gz",
+  "perl5.005.tar.gz",
+  "perl5.004.tar.gz",
+);
+for (my $i = 0; $i <= $#three_oldest; $i++) {
+    is($prod[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
+}
+
+note("development releases");
+
+@dev = $self1->list_development_releases('gz');
+cmp_ok(scalar(@dev), '>=', 1, "Non-zero number of .gz tarballs listed");
+@three_oldest = (
+    "perl5.004_02.tar.gz",
+    "perl5.004_01.tar.gz",
+    "perl5.003_07.tar.gz",
+);
+for (my $i = 0; $i <= $#three_oldest; $i++) {
+    is($dev[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
+}
+
+note("rc releases");
+
+@rc = $self1->list_rc_releases('gz');
+cmp_ok(scalar(@rc), '>=', 1, "Non-zero number of .gz tarballs listed");
+@three_oldest = (
+  "perl-5.6.1-TRIAL3.tar.gz",
+  "perl-5.6.1-TRIAL2.tar.gz",
+  "perl-5.6.1-TRIAL1.tar.gz",
+);
+for (my $i = 0; $i <= $#three_oldest; $i++) {
+    is($rc[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
+}
+
