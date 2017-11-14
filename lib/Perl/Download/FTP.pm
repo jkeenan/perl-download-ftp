@@ -446,10 +446,14 @@ sub list_development_releases {
     my ($self, $compression) = @_;
     $compression = $self->_compression_check($compression);
 
-    return grep { /\.${compression}$/ } sort {
+    my @development_releases =
+        grep { /\.${compression}$/ } sort {
         $self->{versions}->{dev}{$b}{major} <=> $self->{versions}->{dev}{$a}{major} ||
         $self->{versions}->{dev}{$b}{minor} <=> $self->{versions}->{dev}{$a}{minor}
     } keys %{$self->{versions}->{dev}};
+    my $k = "${compression}_dev_releases";
+    $self->{$k} = \@development_releases;
+    return @development_releases;
 }
 
 =head2 C<list_rc_releases()>
@@ -480,14 +484,16 @@ sub list_rc_releases {
     my ($self, $compression) = @_;
     $compression = $self->_compression_check($compression);
 
-    return grep { /\.${compression}$/ } sort {
+    my @rc_releases =
+        grep { /\.${compression}$/ } sort {
         $self->{versions}->{rc}{$b}{major} <=> $self->{versions}->{rc}{$a}{major} ||
         $self->{versions}->{rc}{$b}{minor} <=> $self->{versions}->{rc}{$a}{minor} ||
         $self->{versions}->{rc}{$b}{rc} cmp $self->{versions}->{rc}{$a}{rc}
     } keys %{$self->{versions}->{rc}};
+    my $k = "${compression}_rc_releases";
+    $self->{$k} = \@rc_releases;
+    return @rc_releases;
 }
-
-#$latest_prod    = $self->get_latest_production_release();
 
 =head2 C<get_latest_production_release()>
 
