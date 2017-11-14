@@ -9,12 +9,13 @@ unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
     plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
 }
 else {
-    plan tests => 16;
+    plan tests => 20;
 }
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 use List::Compare::Functional qw(
     is_LsubsetR
 );
+use Capture::Tiny qw( capture_stdout );
 
 my ($self, $host, $dir);
 my (@allarchives, @gzips, @bzips, @xzs);
@@ -155,3 +156,25 @@ ok(is_LsubsetR( [
         "ls(): Got expected error message for bad compression format");
 }
 
+###########################################################
+
+# Tests for verbose output
+
+my ($self1, $stdout);
+
+$self1 = Perl::Download::FTP->new( {
+    host        => $default_host,
+    dir         => $default_dir,
+    Passive     => 1,
+    verbose     => 1,
+} );
+ok(defined $self1, "Constructor returned defined object when using default values");
+isa_ok ($self1, 'Perl::Download::FTP');
+
+$stdout = capture_stdout { @allarchives = $self1->ls(); };
+ok(scalar(@allarchives), "ls(): returned >0 elements");
+like(
+    $stdout,
+    qr/Identified \d+ perl releases at ftp:\/\/\Q${default_host}${default_dir}\E/,
+    "ls(): Got expected verbose output"
+);

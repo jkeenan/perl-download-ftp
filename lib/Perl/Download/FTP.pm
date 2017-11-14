@@ -24,13 +24,17 @@ Perl::Download::FTP - Identify Perl releases and download the most recent via FT
 
     $classified_releases = $self->classify_releases();
 
-    @prod = $self->list_production_releases();
-    @dev  = $self->list_development_releases();
-    @rc   = $self->list_rc_releases();
+    @releases = $self->list_releases( {
+        type            => 'production',
+        compression     => 'gz',
+    } );
 
-    $latest_prod    = $self->get_latest_production_release();
-    $latest_dev     = $self->get_latest_development_release();
-    $latest_rc      = $self->get_latest_rc_release();
+    $latest_release = $self->get_latest_release( {
+        compression     => 'gz',
+        type            => 'dev',
+        dir             => '/path/to/download',
+        verbose         => 1,
+    } );
 
 =head1 DESCRIPTION
 
@@ -115,7 +119,9 @@ sub new {
     my %default_args = (
         host    => 'ftp.cpan.org',
         dir     => '/pub/CPAN/src/5.0',
+        verbose => 0,
     );
+    my $default_args_string = join('|' => keys %default_args);
     my %netftp_options = (
         Firewall        => undef,
         FirewallType    => undef,
@@ -154,11 +160,10 @@ sub new {
     }
 
     # For the Net::FTP constructor, we don't need 'dir' and 'host'
-    # must be passed first; all other key-value pairs follow.
     my %passed_netftp_options;
     for my $k (keys %{$data}) {
         $passed_netftp_options{$k} = $data->{$k}
-            unless ($k =~ m/^(host|dir)$/);
+            unless ($k =~ m/^($default_args_string)$/);
     }
 
     my $ftp = Net::FTP->new($data->{host}, %passed_netftp_options)
@@ -258,6 +263,10 @@ sub ls {
     } $self->{ftp}->ls()
         or croak "Unable to perform FTP 'get' call to host: $!";
     $self->{all_releases} = \@all_releases;
+    say "Identified ",
+        scalar(@all_releases),
+        " perl releases at ftp://$self->{host}$self->{dir}"
+        if $self->{verbose};
     return @all_releases;
 }
 
