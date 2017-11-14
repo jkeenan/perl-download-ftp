@@ -27,8 +27,8 @@ Perl::Download::FTP - Identify Perl releases and download the most recent via FT
     @dev  = $self->list_development_releases();
     @rc   = $self->list_rc_releases();
 
-    $latest_prod    = $self->get_latest_prod_release();
-    $latest_dev     = $self->get_latest_dev_release();
+    $latest_prod    = $self->get_latest_production_release();
+    $latest_dev     = $self->get_latest_development_release();
     $latest_rc      = $self->get_latest_rc_release();
 
 =head1 DESCRIPTION
@@ -254,7 +254,8 @@ sub ls {
         \.tar                   # We only want tarballs
         \.(?:${compression})    # Compression format
         $/x
-    } $self->{ftp}->ls();
+    } $self->{ftp}->ls()
+        or croak "Unable to perform FTP 'get' call to host: $!";
     $self->{all_releases} = \@all_releases;
     return @all_releases;
 }
@@ -400,10 +401,14 @@ sub list_production_releases {
     my ($self, $compression) = @_;
     $compression = $self->_compression_check($compression);
 
-    return grep { /\.${compression}$/ } sort {
+    my @production_releases =
+        grep { /\.${compression}$/ } sort {
         $self->{versions}->{prod}{$b}{major} <=> $self->{versions}->{prod}{$a}{major} ||
         $self->{versions}->{prod}{$b}{minor} <=> $self->{versions}->{prod}{$a}{minor}
     } keys %{$self->{versions}->{prod}};
+    my $k = "${compression}_prod_releases";
+    $self->{$k} = \@production_releases;
+    return @production_releases;
 }
 
 =head2 C<list_development_releases()>
@@ -480,6 +485,60 @@ sub list_rc_releases {
         $self->{versions}->{rc}{$b}{minor} <=> $self->{versions}->{rc}{$a}{minor} ||
         $self->{versions}->{rc}{$b}{rc} cmp $self->{versions}->{rc}{$a}{rc}
     } keys %{$self->{versions}->{rc}};
+}
+
+#$latest_prod    = $self->get_latest_production_release();
+
+=head2 C<get_latest_production_release()>
+
+=over 4
+
+=item * Purpose
+
+Download the latest production release via FTP.
+
+=item * Arguments
+
+    $latest_prod    = $self->get_latest_production_release();
+
+=item * Return Value
+
+Scalar holding path to download of tarball.
+
+=item * Comment
+
+=back
+
+=cut
+
+sub get_latest_production_release {
+    my ($self, $args) = @_;
+    croak "Argument to method must be hashref"
+        unless ref($args) eq 'HASH';
+    my $compression = 'gz';
+    if (exists $args->{compression}) {
+        $compression = $self->_compression_check($args->{compression});
+    }
+    my $cache = "${compression}_prod_releases";
+
+    my $latest;
+    if (exists $self->{$cache}) {
+        say "Identifying latest production release from cache" if $args->{verbose};
+        $latest = $self->{$cache}->[0];
+    }
+    else {
+        say "Identifying latest production release from cache" if $args->{verbose};
+        my @releases = $self->list_production_releases($compression);
+        $latest = $releases[0];
+    }
+    say "Performing FTP 'get' call for: $latest" if $args->{verbose};
+    my $starttime = time();
+    $self->{ftp}->get($latest)
+        or croak "Unable to perform FTP get call: $!";
+    my $endtime = time();
+    say "Elapsed time for FTP 'get' call: ", $endtime - $starttime, " seconds"
+        if $args->{verbose};
+    return $latest;
 }
 
 =head1 BUGS AND SUPPORT

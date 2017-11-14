@@ -9,7 +9,12 @@ Implement and test these methods:
     @dev  = $self->get_development_releases();
     @rc   = $self->get_rc_releases();
 
+Above DONE Nov 13 2017
+
     $latest_prod    = $self->get_latest_prod_release();
     $latest_dev     = $self->get_latest_dev_release();
     $latest_rc      = $self->get_latest_rc_release();
 
+verbose output during get
+path where to place tarball
+make sure we get correct compression

@@ -158,4 +158,3 @@ cmp_ok(scalar(@rc), '>=', 1, "Non-zero number of .xz tarballs listed");
 for (my $i = 0; $i <= $#three_oldest; $i++) {
     is($rc[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
 }
-

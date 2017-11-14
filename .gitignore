@@ -21,3 +21,6 @@ Perl-Download-Archive-*.tar.gz
 /nytprof/
 *.swp
 dump
+*.tar.gz
+*.tar.bz2
+*.tar.xz
