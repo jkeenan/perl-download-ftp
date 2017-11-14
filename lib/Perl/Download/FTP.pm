@@ -531,14 +531,36 @@ sub list_releases {
     if (exists $args->{compression}) {
         $compression = $self->_compression_check($args->{compression});
     }
+    $compression = $self->_prepare_list($compression);
+
+    my @these_releases;
     if ($type eq 'prod') {
-        return $self->list_production_releases($compression);
+        @these_releases =
+            grep { /\.${compression}$/ } sort {
+            $self->{versions}->{$type}{$b}{major} <=> $self->{versions}->{$type}{$a}{major} ||
+            $self->{versions}->{$type}{$b}{minor} <=> $self->{versions}->{$type}{$a}{minor}
+        } keys %{$self->{versions}->{$type}};
+        $self->{"${compression}_${type}_releases"} = \@these_releases;
+        return @these_releases;
     }
     elsif ($type eq 'dev') {
-        return $self->list_development_releases($compression);
+        @these_releases =
+            grep { /\.${compression}$/ } sort {
+            $self->{versions}->{$type}{$b}{major} <=> $self->{versions}->{$type}{$a}{major} ||
+            $self->{versions}->{$type}{$b}{minor} <=> $self->{versions}->{$type}{$a}{minor}
+        } keys %{$self->{versions}->{$type}};
+        $self->{"${compression}_${type}_releases"} = \@these_releases;
+        return @these_releases;
     }
     else { # $type eq rc
-        return $self->list_rc_releases($compression);
+        @these_releases =
+            grep { /\.${compression}$/ } sort {
+            $self->{versions}->{$type}{$b}{major} <=> $self->{versions}->{$type}{$a}{major} ||
+            $self->{versions}->{$type}{$b}{minor} <=> $self->{versions}->{$type}{$a}{minor} ||
+            $self->{versions}->{$type}{$b}{rc}    cmp $self->{versions}->{$type}{$a}{rc}
+        } keys %{$self->{versions}->{$type}};
+        $self->{"${compression}_${type}_releases"} = \@these_releases;
+        return @these_releases;
     }
 }
 

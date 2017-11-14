@@ -2,6 +2,7 @@
 # t/003-classify-releases.t
 use strict;
 use warnings;
+use 5.10.1;
 
 use Perl::Download::FTP;
 use Test::More;
@@ -301,7 +302,7 @@ $allcount = scalar(@allarchives);
 ok($allcount, "ls(): returned >0 elements: $allcount");
 
 note("production releases");
-
+say "AAA:";
 @prod = $self1->list_production_releases('gz');
 cmp_ok(scalar(@prod), '>=', 1, "Non-zero number of .gz tarballs listed");
 @three_oldest = (
@@ -322,6 +323,7 @@ for (my $i = 0; $i <= $#three_oldest; $i++) {
     is($prod[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
 }
 
+say "BBB:";
 note("development releases");
 
 @dev = $self1->list_development_releases('gz');
