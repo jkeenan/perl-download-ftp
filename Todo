@@ -11,10 +11,11 @@ Implement and test these methods:
 
 Above DONE Nov 13 2017
 
-    $latest_prod    = $self->get_latest_prod_release();
-    $latest_dev     = $self->get_latest_dev_release();
-    $latest_rc      = $self->get_latest_rc_release();
 
-verbose output during get
-path where to place tarball
-make sure we get correct compression
+Above DONE Nor 14 2017
+
+* verbose output during get:  implemented but not specifically tested
+    perhaps we should pass verbose to constructor instead
+* path where to place tarball
+* refactor this:
+    $latest_release = $self->get_latest_release();

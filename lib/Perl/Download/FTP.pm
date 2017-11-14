@@ -506,64 +506,41 @@ sub list_rc_releases {
     return @rc_releases;
 }
 
-#sub list_releases {
-#    my ($self, $args) = @_;
-#    croak "Argument to method must be hashref"
-#        unless ref($args) eq 'HASH';
-#    my %eligible_types = (
-#        production      => 'prod',
-#        prod            => 'prod',
-#        development     => 'dev',
-#        dev             => 'dev',
-#        rc              => 'rc',
-#    );
-#    my $type;
-#    if (defined $args->{type}) {
-#        croak "Bad value for 'type': $args->{type}"
-#            unless $eligible_types{$args->{type}};
-#        $type = $eligible_types{$args->{type}};
-#    }
-#    else {
-#        $type = 'dev';
-#    }
-#
-#    my $compression = 'gz';
-#    if (exists $args->{compression}) {
-#        $compression = $self->_compression_check($args->{compression});
-#    }
-#    my ($k, @these_releases);
-#
-#    if ($type eq 'prod') {
-#        @these_releases =
-#            grep { /\.${compression}$/ } sort {
-#            $self->{versions}->{$type}{$b}{major} <=> $self->{versions}->{$type}{$a}{major} ||
-#            $self->{versions}->{$type}{$b}{minor} <=> $self->{versions}->{$type}{$a}{minor}
-#        } keys %{$self->{versions}->{$type}};
-#        $k = "${compression}_${type}_releases";
-#        $self->{$k} = \@these_releases;
-#    }
-#    elsif ($type eq 'dev') {
-#        @these_releases =
-#            grep { /\.${compression}$/ } sort {
-#            $self->{versions}->{$type}{$b}{major} <=> $self->{versions}->{$type}{$a}{major} ||
-#            $self->{versions}->{$type}{$b}{minor} <=> $self->{versions}->{$type}{$a}{minor}
-#        } keys %{$self->{versions}->{$type}};
-#        $k = "${compression}_${type}_releases";
-#        $self->{$k} = \@these_releases;
-#    }
-#    else { # rc
-#        @these_releases =
-#            grep { /\.${compression}$/ } sort {
-#            $self->{versions}->{$type}{$b}{major} <=> $self->{versions}->{$type}{$a}{major} ||
-#            $self->{versions}->{$type}{$b}{minor} <=> $self->{versions}->{$type}{$a}{minor} ||
-#            $self->{versions}->{$type}{$b}{rc}    cmp $self->{versions}->{$type}{$a}{rc}
-#        } keys %{$self->{versions}->{$type}};
-#        $k = "${compression}_${type}_releases";
-#dd($k, [@these_releases]);
-#        $self->{$k} = \@these_releases;
-#    }
-#    return @these_releases;
-#}
+sub list_releases {
+    my ($self, $args) = @_;
+    croak "Argument to method must be hashref"
+        unless ref($args) eq 'HASH';
+    my %eligible_types = (
+        production      => 'prod',
+        prod            => 'prod',
+        development     => 'dev',
+        dev             => 'dev',
+        rc              => 'rc',
+    );
+    my $type;
+    if (defined $args->{type}) {
+        croak "Bad value for 'type': $args->{type}"
+            unless $eligible_types{$args->{type}};
+        $type = $eligible_types{$args->{type}};
+    }
+    else {
+        $type = 'dev';
+    }
+
+    my $compression = 'gz';
+    if (exists $args->{compression}) {
+        $compression = $self->_compression_check($args->{compression});
+    }
+    if ($type eq 'prod') {
+        return $self->list_production_releases($compression);
+    }
+    elsif ($type eq 'dev') {
+        return $self->list_development_releases($compression);
+    }
+    else { # $type eq rc
+        return $self->list_rc_releases($compression);
+    }
+}
 
 =head2 C<get_latest_release()>
 
