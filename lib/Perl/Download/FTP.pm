@@ -495,17 +495,22 @@ sub list_rc_releases {
     return @rc_releases;
 }
 
-=head2 C<get_latest_production_release()>
+=head2 C<get_latest_release()>
 
 =over 4
 
 =item * Purpose
 
-Download the latest production release via FTP.
+Download the latest release via FTP.
 
 =item * Arguments
 
-    $latest_prod    = $self->get_latest_production_release();
+    $latest_release = $self->get_latest_release( {
+        compression     => 'gz',
+        type            => 'dev',
+        dir             => '/path/to/download',
+        verbose         => 1,
+    } );
 
 =item * Return Value
 
@@ -517,24 +522,50 @@ Scalar holding path to download of tarball.
 
 =cut
 
-sub get_latest_production_release {
+sub get_latest_release {
     my ($self, $args) = @_;
     croak "Argument to method must be hashref"
         unless ref($args) eq 'HASH';
+    my %eligible_types = (
+        production      => 'prod',
+        prod            => 'prod',
+        development     => 'dev',
+        dev             => 'dev',
+        rc              => 'rc',
+    );
+    my $type;
+    if (defined $args->{type}) {
+        croak "Bad value for 'type': $args->{type}"
+            unless $eligible_types{$args->{type}};
+        $type = $eligible_types{$args->{type}};
+    }
+    else {
+        $type = 'dev';
+    }
+
     my $compression = 'gz';
     if (exists $args->{compression}) {
         $compression = $self->_compression_check($args->{compression});
     }
-    my $cache = "${compression}_prod_releases";
+    my $cache = "${compression}_${type}_releases";
 
     my $latest;
     if (exists $self->{$cache}) {
-        say "Identifying latest production release from cache" if $args->{verbose};
+        say "Identifying latest $type release from cache" if $args->{verbose};
         $latest = $self->{$cache}->[0];
     }
     else {
-        say "Identifying latest production release from cache" if $args->{verbose};
-        my @releases = $self->list_production_releases($compression);
+        say "Identifying latest $type release" if $args->{verbose};
+        my @releases;
+        if ($type eq 'prod') {
+            @releases = $self->list_production_releases($compression);
+        }
+        elsif ($type eq 'rc') {
+            @releases = $self->list_rc_releases($compression);
+        }
+        else {
+            @releases = $self->list_development_releases($compression);
+        }
         $latest = $releases[0];
     }
     say "Performing FTP 'get' call for: $latest" if $args->{verbose};

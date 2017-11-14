@@ -9,7 +9,7 @@ unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
     plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
 }
 else {
-    plan tests =>  5;
+    plan tests =>  6;
 }
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 
@@ -38,10 +38,17 @@ my $classified_count =
 is($classified_count, $allcount,
     "Got expected number of classified entries: $allcount");
 
-my (@prod, @dev, @rc, @three_oldest);
-my (@prod1, @dev1, @rc1);
+# bad args #
+{
+    local $@;
+    eval { $self->get_latest_release([]); };
+    like($@, qr/Argument to method must be hashref/,
+        "Got expected error message for non-hashref argument");
+}
 
-my $tb = $self->get_latest_production_release( {
-    verbose => 1,
-} );
-ok(-f $tb, "Found downloaded release $tb");
+#my $tb = $self->get_latest_release( {
+#    compression => 'bz2',
+#    verbose => 1,
+#} );
+#ok(-f $tb, "Found downloaded release $tb");
+pass("get_latest_release mock");
