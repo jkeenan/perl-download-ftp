@@ -9,7 +9,7 @@ unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
     plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
 }
 else {
-    plan tests => 94;
+    plan tests => 106;
 }
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 use List::Compare::Functional qw(
@@ -313,6 +313,15 @@ for (my $i = 0; $i <= $#three_oldest; $i++) {
     is($prod[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
 }
 
+@prod = $self1->list_releases( {
+    compression         => 'gz',
+    type                => 'prod',
+} );
+cmp_ok(scalar(@prod), '>=', 1, "Non-zero number of .gz tarballs listed");
+for (my $i = 0; $i <= $#three_oldest; $i++) {
+    is($prod[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
+}
+
 note("development releases");
 
 @dev = $self1->list_development_releases('gz');
@@ -322,6 +331,14 @@ cmp_ok(scalar(@dev), '>=', 1, "Non-zero number of .gz tarballs listed");
     "perl5.004_01.tar.gz",
     "perl5.003_07.tar.gz",
 );
+for (my $i = 0; $i <= $#three_oldest; $i++) {
+    is($dev[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
+}
+@dev = $self1->list_releases( {
+    compression         => 'gz',
+    type                => 'dev',
+} );
+cmp_ok(scalar(@dev), '>=', 1, "Non-zero number of .gz tarballs listed");
 for (my $i = 0; $i <= $#three_oldest; $i++) {
     is($dev[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
 }
@@ -335,6 +352,14 @@ cmp_ok(scalar(@rc), '>=', 1, "Non-zero number of .gz tarballs listed");
   "perl-5.6.1-TRIAL2.tar.gz",
   "perl-5.6.1-TRIAL1.tar.gz",
 );
+for (my $i = 0; $i <= $#three_oldest; $i++) {
+    is($rc[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
+}
+@rc = $self1->list_releases( {
+    compression         => 'gz',
+    type                => 'rc',
+} );
+cmp_ok(scalar(@rc), '>=', 1, "Non-zero number of .gz tarballs listed");
 for (my $i = 0; $i <= $#three_oldest; $i++) {
     is($rc[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
 }
