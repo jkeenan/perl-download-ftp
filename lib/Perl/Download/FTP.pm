@@ -502,30 +502,24 @@ sub get_latest_release {
 
     my $latest;
     if (exists $self->{$cache}) {
-        say "Identifying latest $type release from cache" if $args->{verbose};
+        say "Identifying latest $type release from cache" if $self->{verbose};
         $latest = $self->{$cache}->[0];
     }
     else {
-        say "Identifying latest $type release" if $args->{verbose};
-        my @releases;
-        if ($type eq 'prod') {
-            @releases = $self->list_production_releases($compression);
-        }
-        elsif ($type eq 'rc') {
-            @releases = $self->list_rc_releases($compression);
-        }
-        else {
-            @releases = $self->list_development_releases($compression);
-        }
+        say "Identifying latest $type release" if $self->{verbose};
+        my @releases = $self->list_releases( {
+            compression     => $compression,
+            type            => $type,
+        } );
         $latest = $releases[0];
     }
-    say "Performing FTP 'get' call for: $latest" if $args->{verbose};
+    say "Performing FTP 'get' call for: $latest" if $self->{verbose};
     my $starttime = time();
     $self->{ftp}->get($latest)
         or croak "Unable to perform FTP get call: $!";
     my $endtime = time();
     say "Elapsed time for FTP 'get' call: ", $endtime - $starttime, " seconds"
-        if $args->{verbose};
+        if $self->{verbose};
     return $latest;
 }
 
