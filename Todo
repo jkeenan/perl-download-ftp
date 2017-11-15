@@ -1,21 +1,3 @@
 TODO list for Perl module Perl::Download::FTP
 
-In each test file, add test for network connection; skip otherwise.
-DONE Nov 12 2017
-
-Implement and test these methods:
-
-    @prod = $self->get_production_releases();
-    @dev  = $self->get_development_releases();
-    @rc   = $self->get_rc_releases();
-
-Above DONE Nov 13 2017
-
-
-Above DONE Nor 14 2017
-
-* verbose output during get:  implemented but not specifically tested
-    perhaps we should pass verbose to constructor instead
-* path where to place tarball
-* refactor this:
-    $latest_release = $self->get_latest_release();
+Nothing pending as of Nov 15 2017.
