@@ -8,7 +8,6 @@ use File::Copy;
 use Cwd;
 use File::Spec;
 our $VERSION = '0.01';
-#use Data::Dump qw(dd pp);
 
 =head1 NAME
 
@@ -43,7 +42,7 @@ Perl::Download::FTP - Identify Perl releases and download the most recent via FT
 =head1 DESCRIPTION
 
 This library provides (a) methods for obtaining a list of all Perl 5 releases
-which are available for FTP download; and (b) methods for obtaining the most
+which are available for FTP download; and (b) a method for obtaining the most
 recent release.
 
 =head2 Compression Formats
@@ -51,7 +50,7 @@ recent release.
 Perl releases have, over time, used three different compression formats:
 C<gz>, C<bz2> and C<xz>.  C<gz> is the one that has been used in every
 production, development and release candidate release, so that is the default
-value in some of the methods below.
+value used herein.  All three compression formats are available for use herein.
 
 =head2 Testing
 
@@ -388,6 +387,68 @@ sub _prepare_list {
     return $compression;
 }
 
+=head2 C<list_releases()>
+
+=over 4
+
+=item * Purpose
+
+List all releases for a specified compression format and release type, sorted
+in reverse logical order.
+
+=item * Arguments
+
+    @releases = $self->list_releases( {
+        type            => 'production',
+        compression     => 'gz',
+    } );
+
+Takes a hash reference with, typically two elements:
+
+=over 4
+
+=item * C<compression>
+
+Available values:
+
+    gz      bz2     xz
+
+Defaults to C<gz>.
+
+=item * C<type>
+
+Available values:
+
+    production      prod
+    development     dev
+    rc
+
+Defaults to C<dev>.
+
+=back
+
+=item * Return Value
+
+List of strings naming Perl release tarballs for the specified compression
+format and type.  The list is sorted in reverse logical order, I<i.e.,> the
+newest production release will be the first item in the list and the oldest
+will be the last.  So, for instance, the list of development releases in C<gz>
+format will start with something like:
+
+    perl-5.27.5.tar.gz
+    perl-5.27.4.tar.gz
+    perl-5.27.3.tar.gz
+
+and end with:
+
+    perl5.004_02.tar.gz
+    perl5.004_01.tar.gz
+    perl5.003_07.tar.gz
+
+=back
+
+=cut
+
 sub list_releases {
     my ($self, $args) = @_;
     $args ||= {};
@@ -469,8 +530,6 @@ Download the latest release via FTP.
 =item * Return Value
 
 Scalar holding path to download of tarball.
-
-=item * Comment
 
 =back
 
