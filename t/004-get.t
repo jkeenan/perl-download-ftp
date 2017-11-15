@@ -14,7 +14,9 @@ else {
 }
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 use Capture::Tiny qw( capture_stdout );
-use File::Temp qw( tempdir );
+use Carp;
+use File::Path qw( make_path remove_tree );
+use File::Spec;
 
 my ($self);
 my (@allarchives, $allcount, $stdout);
@@ -59,7 +61,12 @@ is($classified_count, $allcount,
 
 $type = 'prod';
 $compression = 'xz';
-$tdir = tempdir(CLEANUP => 1);
+my $t = File::Spec->catdir(".", "tmp");
+my $removed_count = remove_tree($t, { error  => \my $err_list, })
+    if (-d $t);
+
+($tdir) = make_path($t, +{ mode => 0711 })
+    or croak "Unable to make_path for testing";
 
 $stdout = capture_stdout {
     $tb = $self->get_latest_release( {
@@ -84,5 +91,5 @@ like($stdout,
     qr/Elapsed time for FTP 'get' call:\s+\d+\s+seconds/s,
     "get_latest_release(): Got expected verbose output re elapsed time");
 like($stdout,
-    qr/\QSee:\s+$tb\E/s,
+    qr/See:\s+\Q$tb\E/s,
     "get_latest_release(): Got expected verbose output re download location");

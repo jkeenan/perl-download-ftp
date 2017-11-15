@@ -40,3 +40,4 @@ dump
 \.travis.yml
 \.appveyor.yml
 ^README.md
+tmp/

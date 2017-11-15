@@ -21,7 +21,7 @@ WriteMakefile(
                             'List::Compare' => 0.51,
                             'Test::RequiresInternet' => 0,
                             'Capture::Tiny' => 0,
-                            'File::Temp' => 0,
+                            'File::Path' => 2.06,
                         },
     ($mm_ver < 6.46 ? () : (META_MERGE => {
         'meta-spec' => { version => 2 },
