@@ -9,8 +9,11 @@ WriteMakefile(
     AUTHOR       => 'James E Keenan (jkeenan@cpan.org)',
     ABSTRACT     => 'Identify Perl releases and download the most recent via FTP',
     PREREQ_PM    => {
-                     'Carp'         => 0,
                      'Net::FTP'     => 0,
+                     'Carp'         => 0,
+                     'Cwd'          => 0,
+                     'File::Copy'   => 0,
+                     'File::Spec'   => 0,
     },
     ( $mm_ver < 6.63_03 ? 'BUILD_REQUIRES' : 'TEST_REQUIRES' )
                     =>  {
@@ -18,6 +21,7 @@ WriteMakefile(
                             'List::Compare' => 0.51,
                             'Test::RequiresInternet' => 0,
                             'Capture::Tiny' => 0,
+                            'File::Temp' => 0,
                         },
     ($mm_ver < 6.46 ? () : (META_MERGE => {
         'meta-spec' => { version => 2 },

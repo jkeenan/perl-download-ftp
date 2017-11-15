@@ -4,6 +4,9 @@ use warnings;
 use 5.10.1;
 use Carp;
 use Net::FTP;
+use File::Copy;
+use Cwd;
+use File::Spec;
 our $VERSION = '0.01';
 #use Data::Dump qw(dd pp);
 
@@ -459,7 +462,7 @@ Download the latest release via FTP.
     $latest_release = $self->get_latest_release( {
         compression     => 'gz',
         type            => 'dev',
-        dir             => '/path/to/download',
+        path            => '/path/to/download',
         verbose         => 1,
     } );
 
@@ -500,6 +503,11 @@ sub get_latest_release {
     }
     my $cache = "${compression}_${type}_releases";
 
+    my $path = cwd();
+    if (exists $args->{path}) {
+        croak "Value for 'path' not found" unless (-d $args->{path});
+        $path = $args->{path};
+    }
     my $latest;
     if (exists $self->{$cache}) {
         say "Identifying latest $type release from cache" if $self->{verbose};
@@ -520,7 +528,10 @@ sub get_latest_release {
     my $endtime = time();
     say "Elapsed time for FTP 'get' call: ", $endtime - $starttime, " seconds"
         if $self->{verbose};
-    return $latest;
+    my $rv = File::Spec->catfile($path, $latest);
+    move $latest, $rv or croak "Unable to move $latest to $path";
+    say "See: $rv" if $self->{verbose};
+    return $rv;
 }
 
 =head1 BUGS AND SUPPORT

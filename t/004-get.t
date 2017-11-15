@@ -10,15 +10,16 @@ unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
     plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
 }
 else {
-    plan tests => 11;
+    plan tests => 12;
 }
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 use Capture::Tiny qw( capture_stdout );
+use File::Temp qw( tempdir );
 
 my ($self);
 my (@allarchives, $allcount, $stdout);
 my ($classified, $classified_count, $tb);
-my ($type, $compression);
+my ($type, $compression, $tdir);
 my $default_host = 'ftp.cpan.org';
 my $default_dir  = '/pub/CPAN/src/5.0';
 
@@ -58,11 +59,13 @@ is($classified_count, $allcount,
 
 $type = 'prod';
 $compression = 'xz';
+$tdir = tempdir(CLEANUP => 1);
 
 $stdout = capture_stdout {
     $tb = $self->get_latest_release( {
         compression => $compression,
         type        => $type,
+        path        => $tdir,
     } );
 };
 
@@ -70,13 +73,16 @@ ok(-f $tb, "Found downloaded release $tb");
 
 like($stdout,
     qr/Identifying latest $type release/s,
-    "get_latest_release(): Got expected verbose output");
+    "get_latest_release(): Got expected verbose output re latest releases");
 like($stdout,
     qr/Preparing list of '$type' releases with '$compression' compression/s,
-    "get_latest_release(): Got expected verbose output");
+    "get_latest_release(): Got expected verbose output re list preparation");
 like($stdout,
     qr/Performing FTP 'get' call for/s,
-    "get_latest_release(): Got expected verbose output");
+    "get_latest_release(): Got expected verbose output re starting FTP get");
 like($stdout,
     qr/Elapsed time for FTP 'get' call:\s+\d+\s+seconds/s,
-    "get_latest_release(): Got expected verbose output");
+    "get_latest_release(): Got expected verbose output re elapsed time");
+like($stdout,
+    qr/\QSee:\s+$tb\E/s,
+    "get_latest_release(): Got expected verbose output re download location");
