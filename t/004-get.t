@@ -9,12 +9,14 @@ unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
     plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
 }
 else {
-    plan tests =>  6;
+    plan tests =>  9;
 }
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
+use Capture::Tiny qw( capture_stdout );
 
 my ($self);
-my (@allarchives, $allcount);
+my (@allarchives, $allcount, $stdout);
+my ($classified, $classified_count, $tb);
 my $default_host = 'ftp.cpan.org';
 my $default_dir  = '/pub/CPAN/src/5.0';
 
@@ -22,16 +24,18 @@ $self = Perl::Download::FTP->new( {
     host        => $default_host,
     dir         => $default_dir,
     Passive     => 1,
+    verbose     => 1,
 } );
 ok(defined $self, "Constructor returned defined object when using default values");
 isa_ok ($self, 'Perl::Download::FTP');
 
-@allarchives = $self->ls();
+$stdout = capture_output { @allarchives = $self->ls(); };
+ok(length $stdout, "ls(): Got verbose output");
 $allcount = scalar(@allarchives);
 ok($allcount, "ls(): returned >0 elements: $allcount");
 
-my $classified = $self->classify_releases();
-my $classified_count =
+$classified = $self->classify_releases();
+$classified_count =
     (scalar keys %{$classified->{dev}}) +
     (scalar keys %{$classified->{prod}}) +
     (scalar keys %{$classified->{rc}});
@@ -46,9 +50,16 @@ is($classified_count, $allcount,
         "Got expected error message for non-hashref argument");
 }
 
-#my $tb = $self->get_latest_release( {
-#    compression => 'bz2',
-#    verbose => 1,
-#} );
-#ok(-f $tb, "Found downloaded release $tb");
-pass("get_latest_release mock");
+$stdout = capture_output {
+    $tb = $self->get_latest_release( {
+        compression => 'bz2',
+        type        => 'production',
+    } );
+};
+ok(-f $tb, "Found downloaded release $tb");
+like($stdout,
+    qr/Performing FTP 'get' call for/s,
+    "get_latest_release(): Got expected verbose output");
+like($stdout,
+    qr/Elapsed time for FTP 'get' call:\s+\d+\s+seconds/s,
+    "get_latest_release(): Got expected verbose output");
