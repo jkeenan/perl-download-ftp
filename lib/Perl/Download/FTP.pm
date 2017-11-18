@@ -270,7 +270,7 @@ sub ls {
     $self->{all_releases} = \@all_releases;
     say "Identified ",
         scalar(@all_releases),
-        " perl releases at ftp://$self->{host}$self->{dir}"
+        " perl releases at ftp://$self->{host}/$self->{dir}"
         if $self->{verbose};
     return @all_releases;
 }
