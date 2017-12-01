@@ -268,9 +268,10 @@ sub ls {
     } $self->{ftp}->ls()
         or croak "Unable to perform FTP 'get' call to host: $!";
     $self->{all_releases} = \@all_releases;
+    my $location = "ftp://$self->{host}$self->{dir}";
     say "Identified ",
         scalar(@all_releases),
-        " perl releases at ftp://$self->{host}/$self->{dir}"
+        " perl releases at $location"
         if $self->{verbose};
     return @all_releases;
 }
@@ -589,6 +590,59 @@ sub get_latest_release {
         if $self->{verbose};
     my $rv = File::Spec->catfile($path, $latest);
     move $latest, $rv or croak "Unable to move $latest to $path";
+    say "See: $rv" if $self->{verbose};
+    return $rv;
+}
+
+=head2 C<get_specific_release()>
+
+=over 4
+
+=item * Purpose
+
+Download a specific release via FTP.
+
+=item * Arguments
+
+    $latest_release = $self->get_latest_release( {
+        release         => 'perl-5.27.2.tar.xz',
+        path            => '/path/to/download',
+    } );
+
+=item * Return Value
+
+Scalar holding path to download of tarball.
+
+=back
+
+=cut
+
+sub get_specific_release {
+    my ($self, $args) = @_;
+    croak "Argument to method must be hashref"
+        unless ref($args) eq 'HASH';
+
+    my $path = cwd();
+    if (exists $args->{path}) {
+        croak "Value for 'path' not found" unless (-d $args->{path});
+        $path = $args->{path};
+    }
+
+    my @all_releases = $self->ls;
+    my %all_releases = map {$_ => 1} @all_releases;
+    croak "$args->{release} not found among releases at ftp://$self->{host}$self->{dir}"
+        unless $all_releases{$args->{release}};
+
+    say "Performing FTP 'get' call for: $args->{release}" if $self->{verbose};
+    my $starttime = time();
+    $self->{ftp}->get($args->{release})
+        or croak "Unable to perform FTP get call: $!";
+    my $endtime = time();
+    say "Elapsed time for FTP 'get' call: ", $endtime - $starttime, " seconds"
+        if $self->{verbose};
+    my $rv = File::Spec->catfile($path, $args->{release});
+    move $args->{release}, $rv
+        or croak "Unable to move $args->{release} to $path";
     say "See: $rv" if $self->{verbose};
     return $rv;
 }
