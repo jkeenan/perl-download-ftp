@@ -22,7 +22,7 @@ use File::Spec;
     my ($self);
     my $default_host = 'ftp.cpan.org';
     my $default_dir  = '/pub/CPAN/src/5.0';
-    
+
     $self = Perl::Download::FTP->new( {
         host        => $default_host,
         dir         => $default_dir,
@@ -35,11 +35,11 @@ use File::Spec;
     my $t = File::Spec->catdir(".", "tmp");
     my $removed_count = remove_tree($t, { error  => \my $err_list, })
         if (-d $t);
-    
+
     my ($tb, $tdir, $stdout);
     ($tdir) = make_path($t, +{ mode => 0711 })
         or croak "Unable to make_path for testing";
-    
+
     note("Downloading tarball via FTP; this may take a while");
     my $release = 'perl-5.25.6.tar.xz';
     $stdout = capture_stdout {
@@ -48,9 +48,9 @@ use File::Spec;
             path        => $tdir,
         } );
     };
-    
+
     ok(-f $tb, "Found downloaded release $tb");
-    
+
     like(
         $stdout,
         qr/Identified \d+ perl releases at ftp:\/\/\Q${default_host}${default_dir}\E/,
@@ -71,7 +71,7 @@ use File::Spec;
     my ($self);
     my $default_host = 'ftp.cpan.org';
     my $default_dir  = '/pub/CPAN/src/5.0';
-    
+
     $self = Perl::Download::FTP->new( {
         host        => $default_host,
         dir         => $default_dir,
@@ -85,10 +85,10 @@ use File::Spec;
     my $t = File::Spec->catdir(".", "tmp");
     my $removed_count = remove_tree($t, { error  => \my $err_list, })
         if (-d $t);
-    
+
     ($tdir) = make_path($t, +{ mode => 0711 })
         or croak "Unable to make_path for testing";
-    
+
     my $release = 'perl-5.25.99.tar.gz';
     local $@;
     eval {
