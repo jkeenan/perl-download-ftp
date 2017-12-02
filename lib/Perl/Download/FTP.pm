@@ -39,6 +39,11 @@ Perl::Download::FTP - Identify Perl releases and download the most recent via FT
         verbose         => 1,
     } );
 
+    $specific_release = $self->get_specific_release( {
+        release         => 'perl-5.27.2.tar.xz',
+        path            => '/path/to/download',
+    } );
+
 =head1 DESCRIPTION
 
 This library provides (a) methods for obtaining a list of all Perl 5 releases
@@ -604,7 +609,7 @@ Download a specific release via FTP.
 
 =item * Arguments
 
-    $latest_release = $self->get_latest_release( {
+    $specific_release = $self->get_specific_release( {
         release         => 'perl-5.27.2.tar.xz',
         path            => '/path/to/download',
     } );
