@@ -35,7 +35,7 @@ Perl::Download::FTP - Identify Perl releases and download the most recent via FT
     $latest_release = $self->get_latest_release( {
         compression     => 'gz',
         type            => 'dev',
-        dir             => '/path/to/download',
+        path            => '/path/to/download',
         verbose         => 1,
     } );
 
