@@ -166,6 +166,8 @@ sub new {
     # rather than in:
     #    pub/CPAN/modules/by-module/
 
+	my ($host_subdir) = $args->{distribution} =~ m/^([^-]+)/;
+
     my %default_args = (
         host    => 'ftp.cpan.org',
         dir     => 'pub/CPAN/modules/by-module',
@@ -186,6 +188,7 @@ sub new {
         Domain          => undef,
     );
     my %permitted_args = map {$_ => 1} (
+        'distribution',
         keys %default_args,
         keys %netftp_options,
     );
@@ -222,14 +225,15 @@ sub new {
     $ftp->login("anonymous",'-anonymous@')
         or croak "Cannot login ", $ftp->message;
 
-    $ftp->cwd($data->{dir})
-        or croak "Cannot change to working directory $data->{dir}", $ftp->message;
+    $data->{subdir} = "$data->{dir}/$host_subdir";
+    $ftp->cwd($data->{subdir})
+        or croak "Cannot change to working directory $data->{subdir}", $ftp->message;
 
     $data->{ftp} = $ftp;
 
-    my @compressions = (qw| gz bz2 xz |);
-    $data->{eligible_compressions}  = { map { $_ => 1 } @compressions };
-    $data->{compression_string}     = join('|' => @compressions);
+#    my @compressions = (qw| gz bz2 xz |);
+#    $data->{eligible_compressions}  = { map { $_ => 1 } @compressions };
+#    $data->{compression_string}     = join('|' => @compressions);
 
     return bless $data, $class;
 }
@@ -729,3 +733,10 @@ perl(1).  Net::FTP(3).  Test::RequiresInternet(3).
 =cut
 
 1;
+
+__END__
+#($distvname)   = $tslatest =~ m,([^/]+)\.(?:tar\.(?:g?z|bs2)|zip|tgz)$,i;
+#for my $s ($host_subdir, $distvname) {
+#    croak "Unable to identify one of host_subdir or distvname"
+#        unless $s;
+#}
