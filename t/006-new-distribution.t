@@ -1,10 +1,10 @@
 # -*- perl -*-
-# t/001-new.t
+# t/006-new-distribution.t
 use strict;
 use warnings;
 
 use Perl::Download::FTP::Distribution;
-use Test::More qw(no_plan); # tests => 8;
+use Test::More tests =>  9;
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 
 my ($self, $host, $dir);
@@ -74,9 +74,9 @@ SKIP: {
 
     # good args #
     $self = Perl::Download::FTP::Distribution->new( {
-        distribution => $sample,
-        host        => $default_host,
-        dir         => $default_dir,
+        distribution    => $sample,
+        host            => $default_host,
+        dir             => $default_dir,
     } );
     ok(defined $self, "Constructor returned defined object");
     isa_ok ($self, 'Perl::Download::FTP::Distribution');
@@ -84,7 +84,8 @@ SKIP: {
     $self = Perl::Download::FTP::Distribution->new( {
         distribution => $sample,
     } );
-    ok(defined $self, "Constructor returned defined object when using default values");
+    ok(defined $self,
+        "Constructor returned defined object when using default values for 'host' and 'dir'");
     isa_ok ($self, 'Perl::Download::FTP::Distribution');
 }
 

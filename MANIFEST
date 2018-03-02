@@ -13,4 +13,6 @@ t/003-classify-releases.t
 t/004-get.t
 t/005-get-specific.t
 t/006-new-distribution.t
+t/007-ls-distribution.t
+t/008-get-distribution.t
 Todo

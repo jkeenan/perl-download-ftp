@@ -156,7 +156,7 @@ sub new {
     croak "Must provide 'distribution' element"
         unless $args->{distribution};
 
-    # TODO: The value for 'dir' we pass to the constructor differs among FTP
+    # The value for 'dir' we pass to the constructor differs among FTP
     # mirrors but is uniform within a given mirror.  However, it is *not* the
     # directory to which we will actually change down below.  That's because
     # the tarballs are stored one directory farther down, in a directory named
@@ -231,337 +231,65 @@ sub new {
 
     $data->{ftp} = $ftp;
 
-#    my @compressions = (qw| gz bz2 xz |);
-#    $data->{eligible_compressions}  = { map { $_ => 1 } @compressions };
-#    $data->{compression_string}     = join('|' => @compressions);
-
     return bless $data, $class;
 }
 
-1;
-
-__END__
 =head2 C<ls()>
 
 =over 4
 
 =item * Purpose
 
-Identify all Perl releases.
+Identify all currently available tarballs of the CPAN distribution in question.
 
 =item * Arguments
 
     @all_releases = $self->ls();
 
-Returns list of all Perl core tarballs on the FTP host.
-
-    @all_gzipped_releases = $self->ls('gz');
-
-Returns list of only those all tarballs on the FTP host which are compressed
-in C<.gz> format.  Also available (in separate calls):  C<bz2>, C<xz>.
-
 =item * Return Value
 
 List of strings like:
 
-    "perl-5.10.0-RC2.tar.gz",
-    "perl-5.10.0.tar.gz",
-    "perl-5.26.0.tar.gz",
-    "perl-5.26.1-RC1.tar.gz",
-    "perl-5.27.0.tar.gz",
-    "perl-5.6.0.tar.gz",
-    "perl-5.6.1-TRIAL1.tar.gz",
-    "perl-5.6.1-TRIAL2.tar.gz",
-    "perl-5.6.1-TRIAL3.tar.gz",
-    "perl5.003_07.tar.gz",
-    "perl5.004.tar.gz",
-    "perl5.004_01.tar.gz",
-    "perl5.005.tar.gz",
-    "perl5.005_01.tar.gz",
+    'Test-Smoke-1.53.tar.gz',
+    'Test-Smoke-1.59.tar.gz',
+	'Test-Smoke-1.6.tar.gz',
+	'Test-Smoke-1.70.tar.gz',
+    'Test-Smoke-1.71.tar.gz',
 
-    "perl-5.10.1.tar.bz2",
-    "perl-5.12.2-RC1.tar.bz2",
-    "perl-5.26.1-RC1.tar.bz2",
-    "perl-5.27.0.tar.bz2",
-    "perl-5.8.9.tar.bz2",
+=item * Comment
 
-    "perl-5.21.10.tar.xz",
-    "perl-5.21.6.tar.xz",
-    "perl-5.22.0-RC1.tar.xz",
-    "perl-5.22.0.tar.xz",
-    "perl-5.22.1-RC4.tar.xz",
-    "perl-5.26.1.tar.xz",
-    "perl-5.27.2.tar.xz",
+Results do not include versions which have been moved to BackCPAN.
 
 =back
 
 =cut
 
 sub ls {
-    my ($self, $compression) = @_;
-    if (! defined $compression) {
-        $compression = $self->{compression_string};
-    }
-    else {
-        croak "ls():  Bad compression format:  $compression"
-            unless $self->{eligible_compressions}{$compression};
-    }
-    my @all_releases = grep {
-        /^perl
-        (?:
-            -5\.\d+\.\d+        # 5.6.0 and above
-            |
-            5\.00\d(_\d{2})?    # 5.003_007 thru 5.005
-        )
-        .*?                     # Account for RC and TRIAL
-        \.tar                   # We only want tarballs
-        \.(?:${compression})    # Compression format
-        $/x
-    } $self->{ftp}->ls()
+    my ($self) = shift;
+    my $extensions = qr/(?:tar\.(?:g?z|bz2)|zip|tgz)/;
+    my @releases = grep
+        { m/^$self->{distribution}-v?\d+\.\d+(?:\.\d+)?\.$extensions$/ }
+        $self->{ftp}->ls()
         or croak "Unable to perform FTP 'get' call to host: $!";
-    $self->{all_releases} = \@all_releases;
-    my $location = "ftp://$self->{host}$self->{dir}";
-    say "Identified ",
-        scalar(@all_releases),
-        " perl releases at $location"
-        if $self->{verbose};
-    return @all_releases;
-}
-
-=head2 C<classify_releases()>
-
-=over 4
-
-=item * Purpose
-
-Categorize releases as production, development or RC (release candidate).
-
-=item * Arguments
-
-None.  Works on data stored in object by C<ls()>.
-
-=item * Return Value
-
-Hash reference.
-
-=back
-
-=cut
-
-sub classify_releases {
-    my $self = shift;
-
-    my %versions;
-    for my $tb (@{$self->{all_releases}}) {
-        my ($major, $minor, $rc);
-        if ($tb =~ m/^
-            perl-5\.(\d+)
-            \.(\d+)
-            (?:-((?:TRIAL|RC)\d+))?
-            \.tar\.(?:gz|bz2|xz)
-            $/x) {
-            ($major, $minor, $rc) = ($1,$2,$3);
-            if ($major % 2 == 0) {
-                unless (defined $rc) {
-                    $versions{prod}{$tb} = {
-                        tarball => $tb,
-                        major   => $major,
-                        minor   => $minor,
-                    }
-                }
-                else {
-                    $versions{rc}{$tb} = {
-                        tarball => $tb,
-                        major   => $major,
-                        minor   => $minor,
-                        rc      => $rc,
-                    }
-                }
-            }
-            else {
-                $versions{dev}{$tb} = {
-                    tarball => $tb,
-                    major   => $major,
-                    minor   => $minor,
-                }
-            }
+    my %releases;
+    for my $r (@releases) {
+        my ($v, $w, $x, $y);
+        if (($v) = $r =~ m/^$self->{distribution}-v?(\d+\.\d+)\.$extensions$/) {
+            $releases{$r} = $v;
         }
-        elsif ($tb =~ m/^
-            perl5\.
-            (00\d)
-            (?:_(\d{2}))?   # 5.003_007 thru 5.005; account for RC and TRIAL
-            .*?
-            \.tar           # We only want tarballs
-            \.gz            # Compression format
-            $/x
-        ) {
-            my $early_dev;
-            ($major, $early_dev) = ($1,$2);
-            $early_dev //= '';
-            if (! $early_dev) {
-                $versions{prod}{$tb} = {
-                    tarball => $tb,
-                    major   => $major,
-                    minor   => '',
-                }
-            }
-            else {
-                $versions{dev}{$tb} = {
-                    tarball => $tb,
-                    major   => $major,
-                    minor   => $early_dev,
-                }
-            }
+        elsif (($w, $x, $y) = $r =~ m/^$self->{distribution}-v?(\d+)\.(\d+)\.(\d+)\.$extensions$/) {
+            my $v = sprintf("%04d%04d%04d" => ($w, $x, $y));
+            $releases{$r} = $v;
+        }
+        else {
+            croak "Unable to analyze $r";
         }
     }
-    $self->{versions} = \%versions;
-    return \%versions;
+    my @sorted_releases = sort { $releases{$a} <=> $releases{$b} } keys %releases;;
+    $self->{cache} = [ @sorted_releases ];
+    return @sorted_releases;;
 }
 
-sub _compression_check {
-    my ($self, $compression) = @_;
-    if (! defined $compression) {
-        return 'gz';
-    }
-    else {
-        croak "ls():  Bad compression format:  $compression"
-            unless $self->{eligible_compressions}{$compression};
-        return $compression;
-    }
-}
-
-sub _prepare_list {
-    my ($self, $compression) = @_;
-    $compression = $self->_compression_check($compression);
-
-    unless (exists $self->{versions}) {
-        $self->classify_releases();
-    }
-    return $compression;
-}
-
-=head2 C<list_releases()>
-
-=over 4
-
-=item * Purpose
-
-List all releases for a specified compression format and release type, sorted
-in reverse logical order.
-
-=item * Arguments
-
-    @releases = $self->list_releases( {
-        type            => 'production',
-        compression     => 'gz',
-    } );
-
-Takes a hash reference with, typically two elements:
-
-=over 4
-
-=item * C<compression>
-
-Available values:
-
-    gz      bz2     xz
-
-Defaults to C<gz>.
-
-=item * C<type>
-
-Available values:
-
-    production      prod
-    development     dev
-    rc
-
-Defaults to C<dev>.
-
-=back
-
-=item * Return Value
-
-List of strings naming Perl release tarballs for the specified compression
-format and type.  The list is sorted in reverse logical order, I<i.e.,> the
-newest production release will be the first item in the list and the oldest
-will be the last.  So, for instance, the list of development releases in C<gz>
-format will start with something like:
-
-    perl-5.27.5.tar.gz
-    perl-5.27.4.tar.gz
-    perl-5.27.3.tar.gz
-
-and end with:
-
-    perl5.004_02.tar.gz
-    perl5.004_01.tar.gz
-    perl5.003_07.tar.gz
-
-=back
-
-=cut
-
-sub list_releases {
-    my ($self, $args) = @_;
-    $args ||= {};
-    croak "Argument to method must be hashref"
-        unless ref($args) eq 'HASH';
-    my %eligible_types = (
-        production      => 'prod',
-        prod            => 'prod',
-        development     => 'dev',
-        dev             => 'dev',
-        rc              => 'rc',
-    );
-    my $type;
-    if (defined $args->{type}) {
-        croak "Bad value for 'type': $args->{type}"
-            unless $eligible_types{$args->{type}};
-        $type = $eligible_types{$args->{type}};
-    }
-    else {
-        $type = 'dev';
-    }
-
-    my $compression = 'gz';
-    if (exists $args->{compression}) {
-        $compression = $self->_compression_check($args->{compression});
-    }
-    $compression = $self->_prepare_list($compression);
-
-    say "Preparing list of '$type' releases with '$compression' compression"
-        if $self->{verbose};
-    my @these_releases;
-    if ($type eq 'prod') {
-        @these_releases =
-            grep { /\.${compression}$/ } sort {
-            $self->{versions}->{$type}{$b}{major} <=> $self->{versions}->{$type}{$a}{major} ||
-            $self->{versions}->{$type}{$b}{minor} <=> $self->{versions}->{$type}{$a}{minor}
-        } keys %{$self->{versions}->{$type}};
-        $self->{"${compression}_${type}_releases"} = \@these_releases;
-        return @these_releases;
-    }
-    elsif ($type eq 'dev') {
-        @these_releases =
-            grep { /\.${compression}$/ } sort {
-            $self->{versions}->{$type}{$b}{major} <=> $self->{versions}->{$type}{$a}{major} ||
-            $self->{versions}->{$type}{$b}{minor} <=> $self->{versions}->{$type}{$a}{minor}
-        } keys %{$self->{versions}->{$type}};
-        $self->{"${compression}_${type}_releases"} = \@these_releases;
-        return @these_releases;
-    }
-    else { # $type eq rc
-        @these_releases =
-            grep { /\.${compression}$/ } sort {
-            $self->{versions}->{$type}{$b}{major} <=> $self->{versions}->{$type}{$a}{major} ||
-            $self->{versions}->{$type}{$b}{minor} <=> $self->{versions}->{$type}{$a}{minor} ||
-            $self->{versions}->{$type}{$b}{rc}    cmp $self->{versions}->{$type}{$a}{rc}
-        } keys %{$self->{versions}->{$type}};
-        $self->{"${compression}_${type}_releases"} = \@these_releases;
-        return @these_releases;
-    }
-}
 
 =head2 C<get_latest_release()>
 
@@ -574,8 +302,6 @@ Download the latest release via FTP.
 =item * Arguments
 
     $latest_release = $self->get_latest_release( {
-        compression     => 'gz',
-        type            => 'dev',
         path            => '/path/to/download',
         verbose         => 1,
     } );
@@ -592,28 +318,6 @@ sub get_latest_release {
     my ($self, $args) = @_;
     croak "Argument to method must be hashref"
         unless ref($args) eq 'HASH';
-    my %eligible_types = (
-        production      => 'prod',
-        prod            => 'prod',
-        development     => 'dev',
-        dev             => 'dev',
-        rc              => 'rc',
-    );
-    my $type;
-    if (defined $args->{type}) {
-        croak "Bad value for 'type': $args->{type}"
-            unless $eligible_types{$args->{type}};
-        $type = $eligible_types{$args->{type}};
-    }
-    else {
-        $type = 'dev';
-    }
-
-    my $compression = 'gz';
-    if (exists $args->{compression}) {
-        $compression = $self->_compression_check($args->{compression});
-    }
-    my $cache = "${compression}_${type}_releases";
 
     my $path = cwd();
     if (exists $args->{path}) {
@@ -621,18 +325,15 @@ sub get_latest_release {
         $path = $args->{path};
     }
     my $latest;
-    if (exists $self->{$cache}) {
-        say "Identifying latest $type release from cache" if $self->{verbose};
-        $latest = $self->{$cache}->[0];
+    if (exists $self->{cache} and ref($self->{cache}) eq 'ARRAY' and scalar(@{$self->{cache}})) {
+        $latest = $self->{cache}->[-1];
+        say "Latest release $latest identified from cached ls() call" if $args->{verbose};
     }
     else {
-        say "Identifying latest $type release" if $self->{verbose};
-        my @releases = $self->list_releases( {
-            compression     => $compression,
-            type            => $type,
-        } );
-        $latest = $releases[0];
+        my @releases = $self->ls();
+        $latest = $releases[-1];
     }
+
     say "Performing FTP 'get' call for: $latest" if $self->{verbose};
     my $starttime = time();
     $self->{ftp}->get($latest)
@@ -646,58 +347,7 @@ sub get_latest_release {
     return $rv;
 }
 
-=head2 C<get_specific_release()>
-
-=over 4
-
-=item * Purpose
-
-Download a specific release via FTP.
-
-=item * Arguments
-
-    $specific_release = $self->get_specific_release( {
-        release         => 'perl-5.27.2.tar.xz',
-        path            => '/path/to/download',
-    } );
-
-=item * Return Value
-
-Scalar holding path to download of tarball.
-
-=back
-
-=cut
-
-sub get_specific_release {
-    my ($self, $args) = @_;
-    croak "Argument to method must be hashref"
-        unless ref($args) eq 'HASH';
-
-    my $path = cwd();
-    if (exists $args->{path}) {
-        croak "Value for 'path' not found" unless (-d $args->{path});
-        $path = $args->{path};
-    }
-
-    my @all_releases = $self->ls;
-    my %all_releases = map {$_ => 1} @all_releases;
-    croak "$args->{release} not found among releases at ftp://$self->{host}$self->{dir}"
-        unless $all_releases{$args->{release}};
-
-    say "Performing FTP 'get' call for: $args->{release}" if $self->{verbose};
-    my $starttime = time();
-    $self->{ftp}->get($args->{release})
-        or croak "Unable to perform FTP get call: $!";
-    my $endtime = time();
-    say "Elapsed time for FTP 'get' call: ", $endtime - $starttime, " seconds"
-        if $self->{verbose};
-    my $rv = File::Spec->catfile($path, $args->{release});
-    move $args->{release}, $rv
-        or croak "Unable to move $args->{release} to $path";
-    say "See: $rv" if $self->{verbose};
-    return $rv;
-}
+1;
 
 =head1 BUGS AND SUPPORT
 
@@ -724,7 +374,7 @@ it and/or modify it under the same terms as Perl itself.
 The full text of the license can be found in the
 LICENSE file included with this module.
 
-Copyright James E Keenan 2017.  All rights reserved.
+Copyright James E Keenan 2018.  All rights reserved.
 
 =head1 SEE ALSO
 
