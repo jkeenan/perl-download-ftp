@@ -10,7 +10,7 @@ unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
     plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
 }
 else {
-    plan tests => 35;
+    plan tests => 38;
 }
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 use Capture::Tiny qw( capture_stdout );
@@ -147,6 +147,9 @@ $sample = 'File-Rsync-Mirror-Recent';
 test_get_latest_release($basic_args, $sample);
 
 $sample = 'Lingua-LO-NLP';
+test_get_latest_release($basic_args, $sample);
+
+$sample = 'File-Download';
 test_get_latest_release($basic_args, $sample);
 
 
