@@ -7,7 +7,7 @@ use Net::FTP;
 use File::Copy;
 use Cwd;
 use File::Spec;
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 NAME
 
