@@ -26,23 +26,9 @@ Perl::Download::FTP::Distribution - Identify CPAN distributions and download the
 
     @all_releases = $self->ls();
 
-#    $classified_releases = $self->classify_releases();
-
-    @releases = $self->list_releases( {
-#        type            => 'production',
-#        compression     => 'gz',
-    } );
-
     $latest_release = $self->get_latest_release( {
-#        compression     => 'gz',
-#        type            => 'dev',
         path            => '/path/to/download',
         verbose         => 1,
-    } );
-
-    $specific_release = $self->get_specific_release( {
-        release         => 'perl-5.27.2.tar.xz',
-        path            => '/path/to/download',
     } );
 
 =head1 DESCRIPTION
@@ -246,6 +232,8 @@ Identify all currently available tarballs of the CPAN distribution in question.
 
     @all_releases = $self->ls();
 
+None; all information needed is in the object.
+
 =item * Return Value
 
 List of strings like:
@@ -384,9 +372,3 @@ perl(1).  Net::FTP(3).  Test::RequiresInternet(3).
 
 1;
 
-__END__
-#($distvname)   = $tslatest =~ m,([^/]+)\.(?:tar\.(?:g?z|bs2)|zip|tgz)$,i;
-#for my $s ($host_subdir, $distvname) {
-#    croak "Unable to identify one of host_subdir or distvname"
-#        unless $s;
-#}
