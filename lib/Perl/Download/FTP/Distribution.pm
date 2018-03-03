@@ -294,6 +294,11 @@ Download the latest release via FTP.
         verbose         => 1,
     } );
 
+Takes a hash reference with two possible elements: C<path> and C<verbose>.
+The value of C<path> should be a string holding the path to the directory to
+which the tarball will be downloaded.  If not provided, the tarball will be
+downloaded to the current working directory.
+
 =item * Return Value
 
 Scalar holding path to download of tarball.
