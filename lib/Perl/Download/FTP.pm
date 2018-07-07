@@ -499,7 +499,6 @@ sub list_releases {
         $self->{"${compression}_${type}_releases"} = \@these_releases;
         return @these_releases;
     }
-    #else {  # $type eq 'rc'
     elsif ($type eq 'rc') {
         @these_releases = $self->_get_rc($compression, $type);
         $self->{"${compression}_${type}_releases"} = \@these_releases;
@@ -510,8 +509,24 @@ sub list_releases {
             keys %{$self->{versions}->{dev}};
         my @rc_releases  = grep { /\.${compression}$/ }
             keys %{$self->{versions}->{rc}};
-        # TODO: Correct this sort!
-        @these_releases = reverse sort (@dev_releases, @rc_releases);
+        my %in;
+        for my $r (@dev_releases, @rc_releases) {
+            my ($stem) = $r =~ m/^(.*?)\.tar/;
+            my ($core) = $stem =~ m/^perl-?5\.(.*)/;
+            if ($core =~ m/^00(\d)_(\d+)$/) {
+                my ($minor, $patch) = ($1,$2);
+                ($in{$r}{minor}, $in{$r}{patch}) = ($minor, $patch + 0);
+            }
+            elsif ($core =~ m/^(\d+)\.(.*?)(?:-((?:TRIAL|RC)\d+))?$/) {
+                my ($minor, $patch, $rc) = ($1,$2, $3);
+                ($in{$r}{minor}, $in{$r}{patch}, $in{$r}{rc}) = ($minor, $patch, $rc || '');
+            }
+        }
+        @these_releases = sort {
+            $in{$b}{minor}  <=> $in{$a}{minor} ||
+            $in{$b}{patch}  <=> $in{$a}{patch} ||
+            $in{$b}{rc}     cmp $in{$a}{rc}
+        } keys %in;
 
         $self->{"${compression}_${type}_releases"} = \@these_releases;
         return @these_releases;

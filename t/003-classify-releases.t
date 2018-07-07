@@ -10,14 +10,13 @@ unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
     plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
 }
 else {
-    plan tests =>  69;
+    plan tests =>  76;
 }
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 use List::Compare::Functional qw(
     is_LsubsetR
 );
 use Capture::Tiny qw( capture_stdout );
-use Data::Dump qw( dd pp );
 
 my ($self, $host, $dir);
 my (@allarchives, $allcount, @gzips, @bzips, @xzs);
@@ -197,7 +196,16 @@ note("dev_or_rc releases");
     compression     => 'gz',
 } );
 cmp_ok(scalar(@dev_or_rc), '>=', 1, "Non-zero number of .gz tarballs listed");
-dd(\@dev_or_rc);
+
+@three_oldest = (
+    "perl5.004_02.tar.gz",
+    "perl5.004_01.tar.gz",
+    "perl5.003_07.tar.gz",
+);
+for (my $i = 0; $i <= $#three_oldest; $i++) {
+    is($dev_or_rc[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
+}
+
 
 ###########################################################
 
@@ -265,6 +273,21 @@ for (my $i = 0; $i <= $#three_oldest; $i++) {
 }
 
 note("dev_or_rc releases");
+
+@dev_or_rc = $self1->list_releases( {
+    type            => 'dev_or_rc',
+    compression     => 'gz',
+} );
+cmp_ok(scalar(@dev_or_rc), '>=', 1, "Non-zero number of .gz tarballs listed");
+
+@three_oldest = (
+    "perl5.004_02.tar.gz",
+    "perl5.004_01.tar.gz",
+    "perl5.003_07.tar.gz",
+);
+for (my $i = 0; $i <= $#three_oldest; $i++) {
+    is($dev_or_rc[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
+}
 
 ###########################################################
 
