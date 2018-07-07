@@ -51,7 +51,7 @@ note("production releases");
 
 @prod = $self->list_releases( {
     type            => 'production',
-    compression     => 'gz',
+    compression     => undef, # Ensure that _compression_check() is exercised
 } );
 cmp_ok(scalar(@prod), '>=', 1, "Non-zero number of .gz tarballs listed");
 @three_oldest = (

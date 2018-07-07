@@ -10,25 +10,25 @@ unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
     plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
 }
 else {
-    plan tests => 18;
+    plan tests => 23;
 }
-use Test::RequiresInternet ('ftp.cpan.org' => 21);
+use Test::RequiresInternet ('ftp.funet.fi' => 21);
 use Capture::Tiny qw( capture_stdout );
 use Carp;
 use File::Path qw( make_path remove_tree );
 use File::Spec;
 
-my ($self);
+my ($self, $self1);
 my (@allarchives, $allcount, $stdout);
 my ($classified, $classified_count, $tb);
 my ($type, $compression, $tdir);
 my ($t, $removed_count);
-my $default_host = 'ftp.cpan.org';
-my $default_dir  = '/pub/CPAN/src/5.0';
+my $host = 'ftp.funet.fi';
+my $dir  = '/pub/languages/perl/CPAN/src/5.0';
 
 $self = Perl::Download::FTP->new( {
-    host        => $default_host,
-    dir         => $default_dir,
+    host        => $host,
+    dir         => $dir,
     Passive     => 1,
     verbose     => 1,
 } );
@@ -40,7 +40,7 @@ $allcount = scalar(@allarchives);
 ok($allcount, "ls(): returned >0 elements: $allcount");
 like(
     $stdout,
-    qr/Identified \d+ perl releases at ftp:\/\/\Q${default_host}${default_dir}\E/,
+    qr/Identified \d+ perl releases at ftp:\/\/\Q${host}${dir}\E/,
     "ls(): Got expected verbose output"
 );
 
@@ -138,4 +138,50 @@ is($classified_count, $allcount,
     like($stdout,
         qr/See:\s+\Q$tb\E/s,
         "get_latest_release(): Got expected verbose output re download location");
+}
+
+{
+    note("Download latest development release (type not specified in call)");
+    note("Non-verbose output");
+
+    $self1 = Perl::Download::FTP->new( {
+        host        => $host,
+        dir         => $dir,
+        Passive     => 1,
+        #verbose     => 1,
+    } );
+    ok(defined $self1, "Constructor returned defined object when using default values");
+    isa_ok ($self1, 'Perl::Download::FTP');
+
+    $type = 'dev';
+    $compression = 'gz';
+    $t = File::Spec->catdir(".", "tmp");
+    $removed_count = remove_tree($t, { error  => \my $err_list, })
+        if (-d $t);
+
+    ($tdir) = make_path($t, +{ mode => 0711 })
+        or croak "Unable to make_path for testing";
+
+    @allarchives = $self1->ls();
+    $allcount = scalar(@allarchives);
+    ok($allcount, "ls(): returned >0 elements: $allcount");
+
+    $classified = $self1->classify_releases();
+    $classified_count =
+        (scalar keys %{$classified->{dev}}) +
+        (scalar keys %{$classified->{prod}}) +
+        (scalar keys %{$classified->{rc}});
+    is($classified_count, $allcount,
+        "Got expected number of classified entries: $allcount");
+
+    my @dev = $self1->list_releases( {} );
+
+    note("Downloading tarball via FTP; this may take a while");
+    $tb = $self1->get_latest_release( {
+        compression => $compression,
+        #type        => $type,
+        path        => $tdir,
+    } );
+
+    ok(-f $tb, "Found downloaded release $tb");
 }
