@@ -63,4 +63,3 @@ when you say:
 
 Each test file further attempts to confirm the possibility of making an FTP
 connection by using CPAN library Test::RequiresInternet.
-
