@@ -499,14 +499,23 @@ sub list_releases {
         $self->{"${compression}_${type}_releases"} = \@these_releases;
         return @these_releases;
     }
-    else {  # $type eq 'rc' 
-    #elsif ($type eq 'rc') {
+    #else {  # $type eq 'rc'
+    elsif ($type eq 'rc') {
         @these_releases = $self->_get_rc($compression, $type);
         $self->{"${compression}_${type}_releases"} = \@these_releases;
         return @these_releases;
     }
-    #else { # $type eq dev_or_rc
-    #}
+    else { # $type eq dev_or_rc
+        my @dev_releases = grep { /\.${compression}$/ }
+            keys %{$self->{versions}->{dev}};
+        my @rc_releases  = grep { /\.${compression}$/ }
+            keys %{$self->{versions}->{rc}};
+        # TODO: Correct this sort!
+        @these_releases = reverse sort (@dev_releases, @rc_releases);
+
+        $self->{"${compression}_${type}_releases"} = \@these_releases;
+        return @these_releases;
+    }
 }
 
 sub _get_prod_or_dev {

@@ -10,13 +10,14 @@ unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
     plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
 }
 else {
-    plan tests =>  68;
+    plan tests =>  69;
 }
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 use List::Compare::Functional qw(
     is_LsubsetR
 );
 use Capture::Tiny qw( capture_stdout );
+use Data::Dump qw( dd pp );
 
 my ($self, $host, $dir);
 my (@allarchives, $allcount, @gzips, @bzips, @xzs);
@@ -44,6 +45,7 @@ is($classified_count, $allcount,
 
 my (@prod, @dev, @rc, @three_oldest);
 my (@prod1, @dev1, @rc1);
+my (@dev_or_rc);
 
 note("production releases");
 
@@ -189,6 +191,13 @@ for (my $i = 0; $i <= $#three_oldest; $i++) {
 }
 
 note("dev_or_rc releases");
+
+@dev_or_rc = $self->list_releases( {
+    type            => 'dev_or_rc',
+    compression     => 'gz',
+} );
+cmp_ok(scalar(@dev_or_rc), '>=', 1, "Non-zero number of .gz tarballs listed");
+dd(\@dev_or_rc);
 
 ###########################################################
 
