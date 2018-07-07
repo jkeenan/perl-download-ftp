@@ -428,8 +428,10 @@ Available values:
     production      prod
     development     dev
     rc
+    dev_or_rc
 
-Defaults to C<dev>.
+Defaults to C<dev>.  Selecting C<dev_or_fc> will return any release which is
+either C<development|dev> or C<rc>.
 
 =back
 
@@ -466,6 +468,7 @@ sub list_releases {
         development     => 'dev',
         dev             => 'dev',
         rc              => 'rc',
+        dev_or_rc       => 'dev_or_rc',
     );
     my $type;
     if (defined $args->{type}) {
@@ -487,33 +490,44 @@ sub list_releases {
         if $self->{verbose};
     my @these_releases;
     if ($type eq 'prod') {
-        @these_releases =
-            grep { /\.${compression}$/ } sort {
-            $self->{versions}->{$type}{$b}{major} <=> $self->{versions}->{$type}{$a}{major} ||
-            $self->{versions}->{$type}{$b}{minor} <=> $self->{versions}->{$type}{$a}{minor}
-        } keys %{$self->{versions}->{$type}};
+        @these_releases = $self->_get_prod_or_dev($compression, $type);
         $self->{"${compression}_${type}_releases"} = \@these_releases;
         return @these_releases;
     }
     elsif ($type eq 'dev') {
-        @these_releases =
+        @these_releases = $self->_get_prod_or_dev($compression, $type);
+        $self->{"${compression}_${type}_releases"} = \@these_releases;
+        return @these_releases;
+    }
+    else {  # $type eq 'rc' 
+    #elsif ($type eq 'rc') {
+        @these_releases = $self->_get_rc($compression, $type);
+        $self->{"${compression}_${type}_releases"} = \@these_releases;
+        return @these_releases;
+    }
+    #else { # $type eq dev_or_rc
+    #}
+}
+
+sub _get_prod_or_dev {
+    my ($self, $compression, $type) = @_;
+    my @these_releases =
             grep { /\.${compression}$/ } sort {
             $self->{versions}->{$type}{$b}{major} <=> $self->{versions}->{$type}{$a}{major} ||
             $self->{versions}->{$type}{$b}{minor} <=> $self->{versions}->{$type}{$a}{minor}
         } keys %{$self->{versions}->{$type}};
-        $self->{"${compression}_${type}_releases"} = \@these_releases;
-        return @these_releases;
-    }
-    else { # $type eq rc
-        @these_releases =
+    return @these_releases;
+}
+
+sub _get_rc {
+    my ($self, $compression, $type) = @_;
+    my @these_releases =
             grep { /\.${compression}$/ } sort {
             $self->{versions}->{$type}{$b}{major} <=> $self->{versions}->{$type}{$a}{major} ||
             $self->{versions}->{$type}{$b}{minor} <=> $self->{versions}->{$type}{$a}{minor} ||
             $self->{versions}->{$type}{$b}{rc}    cmp $self->{versions}->{$type}{$a}{rc}
         } keys %{$self->{versions}->{$type}};
-        $self->{"${compression}_${type}_releases"} = \@these_releases;
-        return @these_releases;
-    }
+    return @these_releases;
 }
 
 =head2 C<get_latest_release()>
