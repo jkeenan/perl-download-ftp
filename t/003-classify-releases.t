@@ -10,7 +10,7 @@ unless ($ENV{PERL_ALLOW_NETWORK_TESTING}) {
     plan 'skip_all' => "Set PERL_ALLOW_NETWORK_TESTING to conduct live tests";
 }
 else {
-    plan tests =>  76;
+    plan tests =>  78;
 }
 use Test::RequiresInternet ('ftp.cpan.org' => 21);
 use List::Compare::Functional qw(
@@ -20,6 +20,7 @@ use Capture::Tiny qw( capture_stdout );
 
 my ($self, $host, $dir);
 my (@allarchives, $allcount, @gzips, @bzips, @xzs);
+my (@devgz, @rcgz);
 my $default_host = 'ftp.cpan.org';
 my $default_dir  = '/pub/CPAN/src/5.0';
 
@@ -105,6 +106,7 @@ cmp_ok(scalar(@dev), '>=', 1, "Non-zero number of .gz tarballs listed");
 for (my $i = 0; $i <= $#three_oldest; $i++) {
     is($dev[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
 }
+@devgz = map {$_} @dev;
 
 note("list_releases() default case: type: dev compression: gz");
 
@@ -159,6 +161,7 @@ cmp_ok(scalar(@rc), '>=', 1, "Non-zero number of .gz tarballs listed");
 for (my $i = 0; $i <= $#three_oldest; $i++) {
     is($rc[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
 }
+@rcgz = map {$_} @rc;
 
 @rc = $self->list_releases( {
     type            => 'rc',
@@ -206,6 +209,10 @@ for (my $i = 0; $i <= $#three_oldest; $i++) {
     is($dev_or_rc[$i-3], $three_oldest[$i], "Got $three_oldest[$i] where expected");
 }
 
+ok(is_LsubsetR( [ \@devgz, \@dev_or_rc ] ),
+    "List of gz dev releases is subset of list of gz dev_or_rc releases");
+ok(is_LsubsetR( [ \@rcgz,  \@dev_or_rc ] ),
+    "List of gz rc  releases is subset of list of gz dev_or_rc releases");
 
 ###########################################################
 

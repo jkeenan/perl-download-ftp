@@ -190,6 +190,14 @@ sub new {
     my @compressions = (qw| gz bz2 xz |);
     $data->{eligible_compressions}  = { map { $_ => 1 } @compressions };
     $data->{compression_string}     = join('|' => @compressions);
+    $data->{eligible_types} = {
+        production      => 'prod',
+        prod            => 'prod',
+        development     => 'dev',
+        dev             => 'dev',
+        rc              => 'rc',
+        dev_or_rc       => 'dev_or_rc',
+    };
 
     return bless $data, $class;
 }
@@ -462,19 +470,11 @@ sub list_releases {
     $args ||= {};
     croak "Argument to method must be hashref"
         unless ref($args) eq 'HASH';
-    my %eligible_types = (
-        production      => 'prod',
-        prod            => 'prod',
-        development     => 'dev',
-        dev             => 'dev',
-        rc              => 'rc',
-        dev_or_rc       => 'dev_or_rc',
-    );
     my $type;
     if (defined $args->{type}) {
         croak "Bad value for 'type': $args->{type}"
-            unless $eligible_types{$args->{type}};
-        $type = $eligible_types{$args->{type}};
+            unless $self->{eligible_types}->{$args->{type}};
+        $type = $self->{eligible_types}->{$args->{type}};
     }
     else {
         $type = 'dev';
@@ -571,6 +571,8 @@ Download the latest release via FTP.
         verbose         => 1,
     } );
 
+Possible values for C<compression> and C<type> are the same as for C<list_releases()>.
+
 =item * Return Value
 
 Scalar holding path to download of tarball.
@@ -583,18 +585,11 @@ sub get_latest_release {
     my ($self, $args) = @_;
     croak "Argument to method must be hashref"
         unless ref($args) eq 'HASH';
-    my %eligible_types = (
-        production      => 'prod',
-        prod            => 'prod',
-        development     => 'dev',
-        dev             => 'dev',
-        rc              => 'rc',
-    );
     my $type;
     if (defined $args->{type}) {
         croak "Bad value for 'type': $args->{type}"
-            unless $eligible_types{$args->{type}};
-        $type = $eligible_types{$args->{type}};
+            unless $self->{eligible_types}->{$args->{type}};
+        $type = $self->{eligible_types}->{$args->{type}};
     }
     else {
         $type = 'dev';
