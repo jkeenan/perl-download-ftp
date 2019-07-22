@@ -328,6 +328,7 @@ sub get_latest_release {
     }
 
     say "Performing FTP 'get' call for: $latest" if $self->{verbose};
+    $self->{ftp}->binary();
     my $starttime = time();
     $self->{ftp}->get($latest)
         or croak "Unable to perform FTP get call: $!";
